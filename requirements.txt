@@ -2,4 +2,5 @@
 
 flake8
 pylint
+pylint-quotes
 mypy
