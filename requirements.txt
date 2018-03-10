@@ -1,6 +1,9 @@
 -e .
 
+coverage
 flake8
 pylint
 pylint-quotes
+pytest
+pytest-cov
 mypy

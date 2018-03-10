@@ -4,7 +4,7 @@ from curio.network import open_connection
 from dataclasses import dataclass
 
 from .errors import ConnectionFailedError
-from .typing import AsyncBinaryIO
+from .typing_local import AsyncBinaryIO
 
 
 @dataclass

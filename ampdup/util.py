@@ -78,6 +78,8 @@ def from_json_like(cls, j):
         return from_dict(cls, j)
     if issubclass(cls, List):
         return from_list(cls, j)
+    if any(issubclass(cls, t) for t in (int, float)):
+        return cls(j)
     return j
 
 

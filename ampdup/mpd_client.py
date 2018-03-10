@@ -1,30 +1,8 @@
 '''MPD Client module.'''
-from typing import NamedTuple
-
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError
-from .util import has_any_prefix, from_json_like
-
-
-class Song(NamedTuple):
-    '''Type representing the static data about a playable song in MPD.'''
-    file: str
-    last_modified: str
-    artist: str
-    title: str
-    album: str
-    track: int
-    date: int
-    genre: str
-    time: int
-    duration: float
-    pos: int
-    id: int
-
-
-def normalize(s: str) -> str:
-    '''normalize'''
-    return s.lower().replace('-', '_')
+from .song import Song
+from .util import has_any_prefix
 
 
 class MPDClient(BaseMPDClient):
@@ -43,6 +21,4 @@ class MPDClient(BaseMPDClient):
             Song: The same song that is identified in status.
         '''
         result = await self.run_command('currentsong')
-        values = (r.split(': ') for r in result)
-        normalized = {normalize(k): v for k, v in values}
-        return from_json_like(Song, normalized)
+        return Song.from_lines(result)
