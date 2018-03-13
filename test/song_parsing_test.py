@@ -34,6 +34,4 @@ def test_song_from_lines():
         id=123,
     )
 
-    print(Song.from_lines(lines))
-
     assert Song.from_lines(lines) == song
