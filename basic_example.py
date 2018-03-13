@@ -1,3 +1,5 @@
+from typing import List
+
 from ampdup import CommandError, IdleMPDClient, MPDClient
 from curio import run
 from curio.task import spawn, TaskCancelled
@@ -23,12 +25,19 @@ async def commands(client: MPDClient):
             break
 
         try:
-            result = await client.run_command(command)
+            m = getattr(client, command)
+            if m:
+                result = await m()
+            else:
+                result = await client.run_command(command)
         except CommandError as e:
             print(f"Error {e.code}: {e.message}")
         else:
-            for line in result:
-                print(line)
+            if isinstance(result, List):
+                for line in result:
+                    print(line)
+            else:
+                print(result)
 
 
 async def main():
