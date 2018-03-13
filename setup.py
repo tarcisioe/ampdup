@@ -2,7 +2,7 @@ from sys import version_info as py_version
 from setuptools import setup, find_packages
 
 
-VERSION = '0.0.2'
+VERSION = '0.0.3'
 
 VERSION_REQUIREMENTS = []
 
