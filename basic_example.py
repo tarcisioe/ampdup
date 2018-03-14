@@ -25,8 +25,8 @@ async def commands(client: MPDClient):
             break
 
         try:
-            m = getattr(client, command)
-            if m:
+            m = getattr(client, command, None)
+            if m is not None:
                 result = await m()
             else:
                 result = await client.run_command(command)
