@@ -25,5 +25,5 @@ def split_item(item: str) -> Tuple[str, str]:
     Returns:
         The (key, value) tuple, with both sides stripped.
     '''
-    lhs, rhs = item.split(':')
+    lhs, rhs = item.split(':', maxsplit=1)
     return lhs.strip(), rhs.strip()
