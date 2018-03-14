@@ -11,5 +11,5 @@ __all__ = [
     'MPDClient',
     'Song',
     'Subsystem',
-     *errors.__all__  # noqa
+    *errors.__all__  # noqa
 ]

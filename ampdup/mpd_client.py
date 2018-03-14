@@ -1,6 +1,6 @@
 '''MPD Client module.'''
 from .base_client import BaseMPDClient
-from .errors import ClientTypeError
+from .errors import ClientTypeError, NoCurrentSongError
 from .song import Song
 from .util import has_any_prefix
 
@@ -21,4 +21,8 @@ class MPDClient(BaseMPDClient):
             Song: The same song that is identified in status.
         '''
         result = await self.run_command('currentsong')
+
+        if not result:
+            raise NoCurrentSongError('There is no current song playing.')
+
         return Song.from_lines(result)
