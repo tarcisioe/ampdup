@@ -1,5 +1,7 @@
 '''MPD output parsing utilities.'''
-from typing import Tuple
+from typing import List, Tuple
+
+from .util import from_json_like
 
 
 def normalize(name: str) -> str:
@@ -27,3 +29,10 @@ def split_item(item: str) -> Tuple[str, str]:
     '''
     lhs, rhs = item.split(':', maxsplit=1)
     return lhs.strip(), rhs.strip()
+
+
+def from_lines(cls: type, lines: List[str]):
+    '''Make a `cls` object from a list of lines in MPD output format.'''
+    values = (split_item(l) for l in lines)
+    normalized = {normalize(k): v for k, v in values}
+    return from_json_like(cls, normalized)

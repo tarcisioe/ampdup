@@ -1,4 +1,5 @@
 from ampdup import Song
+from ampdup.parsing import from_lines
 
 
 def test_song_from_lines():
@@ -34,4 +35,4 @@ def test_song_from_lines():
         id=123,
     )
 
-    assert Song.from_lines(lines) == song
+    assert from_lines(Song, lines) == song
