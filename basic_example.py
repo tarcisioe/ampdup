@@ -29,7 +29,7 @@ async def commands(client: MPDClient):
             if m is not None:
                 result = await m()
             else:
-                result = await client.run_command(command)
+                result = await client.run_command(command.strip('!'))
         except CommandError as e:
             print(f'Error {e.code}: {e.message}')
         except MPDError as e:
