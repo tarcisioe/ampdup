@@ -3,6 +3,8 @@ import sys
 
 from enum import Enum, EnumMeta
 from functools import lru_cache
+from itertools import groupby
+from operator import itemgetter
 from typing import (
     Any, Callable, Iterable, Iterator, List, Sequence, Tuple, TypeVar, Union
 )
@@ -189,3 +191,26 @@ def enumerate_on(pred: Predicate,
         if pred(e):
             i += 1
         yield i, e
+
+
+def split_on(pred: Predicate,
+             iterable: Iterable[T]) -> Iterable[Iterable[T]]:
+    '''Split an iterable based on sentnel elements.
+
+    A sentinel element is one for which `pred` is `True`. From it onwards a
+    new split is made.
+
+    Args:
+        pred: A predicate identifying a sentinel element.
+        iterable: An iterable to enumerate.
+
+    Returns:
+        An iterable with an iterable for each split.
+    '''
+
+    enumerated = enumerate_on(pred,
+                              iterable)
+
+    return ((line for _, line in group)
+            for _, group in groupby(enumerated,
+                                    key=itemgetter(0)))
