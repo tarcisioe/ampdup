@@ -1,4 +1,4 @@
-'''Playe state representation.'''
+'''Player state representation.'''
 from typing import NamedTuple
 
 from enum import Enum
