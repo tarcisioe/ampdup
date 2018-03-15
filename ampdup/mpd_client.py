@@ -3,6 +3,7 @@ from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
 from .song import Song
 from .parsing import from_lines
+from .stats import Stats
 from .status import Status
 from .util import has_any_prefix
 
@@ -37,3 +38,12 @@ class MPDClient(BaseMPDClient):
         '''
         result = await self.run_command('status')
         return from_lines(Status, result)
+
+    async def stats(self) -> Stats:
+        '''Get player stats. Refer to the Stats type to see what is available.
+
+        Returns:
+            Statistics about the player.
+        '''
+        result = await self.run_command('stats')
+        return from_lines(Stats, result)
