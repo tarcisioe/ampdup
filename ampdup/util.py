@@ -2,7 +2,9 @@
 
 import sys
 
-from typing import List, Sequence
+from enum import Enum, EnumMeta
+from functools import lru_cache
+from typing import Any, List, Sequence
 
 
 if sys.version_info < (3, 7):
@@ -14,6 +16,40 @@ else:
 __all__ = [
     'asynccontextmanager',
 ]
+
+
+class NoCommonTypeError(Exception):
+    '''Happens when values in an Enum are not of the same type.'''
+    pass
+
+
+class EmptyEnumError(Exception):
+    '''Happens when an enum has no value.'''
+    pass
+
+
+@lru_cache()
+def underlying_type(enum_type: EnumMeta) -> type:
+    '''Get the underlying type of an enum.
+
+    Returns:
+        The type of every value in the enum if it is the same.
+
+    Raises:
+        NoCommonTypeError: If the values in the enum are not of the same type.
+        EmptyEnumError: If the enum has no value.
+    '''
+    try:
+        first: Any = next(iter(enum_type))
+    except StopIteration:
+        raise EmptyEnumError('No value in enum.')
+
+    t = type(first.value)
+
+    if any(not isinstance(v.value, t) for v in enum_type):  # type: ignore
+        raise NoCommonTypeError('No common type in enum.')
+
+    return t
 
 
 def is_namedtuple(cls: type) -> bool:
@@ -78,6 +114,8 @@ def from_json_like(cls, j):
         return from_dict(cls, j)
     if issubclass(cls, List):
         return from_list(cls, j)
+    if issubclass(cls, Enum):
+        return cls(underlying_type(cls)(j))
     if any(issubclass(cls, t) for t in (int, float)):
         return cls(j)
     return j
