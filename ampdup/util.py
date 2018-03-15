@@ -75,7 +75,7 @@ def from_list(list_type, v):
         v: A JSON-like list.
 
     Returns:
-        An object of type `list_type`.
+        list_type: An object of type `list_type`.
     '''
     inner_type, = list_type.__args__
     return [from_json_like(inner_type, value) for value in v]
@@ -89,7 +89,7 @@ def from_dict(cls, d):
         d: a dict of property names to values.
 
     Returns:
-        An object of type `cls`.
+        cls: An object of type `cls`.
     '''
     # pylint:disable=protected-access
     if hasattr(cls, '_renames'):
@@ -108,7 +108,7 @@ def from_json_like(cls, j):
         j: the JSON-like object.
 
     Returns:
-        An object of type `cls`.
+        cls: An object of type `cls`.
     '''
     if is_namedtuple(cls):
         return from_dict(cls, j)

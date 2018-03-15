@@ -22,7 +22,7 @@ def split_item(item: str) -> Tuple[str, str]:
     This also strips space from both sides of either.
 
     Args:
-        name: A key/value string in 'key: value' format.
+        item: A key/value string in 'key: value' format.
 
     Returns:
         The (key, value) tuple, with both sides stripped.
