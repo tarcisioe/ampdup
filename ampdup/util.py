@@ -1,10 +1,11 @@
 '''Utility module.'''
-
 import sys
 
 from enum import Enum, EnumMeta
 from functools import lru_cache
-from typing import Any, List, Sequence
+from typing import (
+    Any, Callable, Iterable, Iterator, List, Sequence, Tuple, TypeVar, Union
+)
 
 
 if sys.version_info < (3, 7):
@@ -16,6 +17,14 @@ else:
 __all__ = [
     'asynccontextmanager',
 ]
+
+
+class NothingType:
+    '''Class to represent nothing when None may be a value.'''
+    pass
+
+
+Nothing = NothingType()
 
 
 class NoCommonTypeError(Exception):
@@ -134,3 +143,49 @@ def has_any_prefix(s: str, prefixes: Sequence[str]) -> bool:
         Whether the string matches any of the prefixes.
     '''
     return any(s.startswith(prefix) for prefix in prefixes)
+
+
+T = TypeVar('T')
+Predicate = Callable[[T], bool]
+
+
+def safe_next(it: Iterator[T]) -> Union[T, NothingType]:
+    '''Get the next from an iterator with no StopIteration nor None.
+
+    Returns:
+        The next value in the iterator or a value representing truly nothing.
+    '''
+    return next(it, Nothing)
+
+
+def enumerate_on(pred: Predicate,
+                 iterable: Iterable[T],
+                 begin: int = 0) -> Iterable[Tuple[int, T]]:
+    '''Generate enumerated tuples based on sentinel elements in an iterable.
+
+    A sentinel element is one for which `pred` is `True`. From it onwards the
+    enumeration is incremented.
+
+    Args:
+        pred: A predicate identifying a sentinel element.
+        iterable: An iterable to enumerate.
+        begin: where to begin the enumeration.
+
+    Returns:
+        The enumerated iterable of tuples.
+    '''
+    i = begin
+
+    it = iter(iterable)
+
+    first = safe_next(it)
+
+    if isinstance(first, NothingType):
+        return
+
+    yield i, first
+
+    for e in it:
+        if pred(e):
+            i += 1
+        yield i, e
