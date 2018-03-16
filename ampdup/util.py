@@ -121,17 +121,19 @@ def from_json_like(cls, j):
     Returns:
         cls: An object of type `cls`.
     '''
+    if any(cls is t for t in (int, float)):
+        return cls(j)
+    if cls is str:
+        return j
+    if cls is bool:
+        return cls(int(j))
     if is_namedtuple(cls):
         return from_dict(cls, j)
-    if issubclass(cls, List):
-        return from_list(cls, j)
     if issubclass(cls, Enum):
         return cls(underlying_type(cls)(j))
-    if issubclass(cls, bool):
-        return cls(int(j))
-    if any(issubclass(cls, t) for t in (int, float)):
-        return cls(j)
-    return j
+    if issubclass(cls, List):
+        return from_list(cls, j)
+    raise TypeError(f'{j} cannot be converted into {cls}.')
 
 
 def has_any_prefix(s: str, prefixes: Sequence[str]) -> bool:
