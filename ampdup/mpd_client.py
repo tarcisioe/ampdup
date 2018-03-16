@@ -1,5 +1,5 @@
 '''MPD Client module.'''
-from typing import List
+from typing import List, Tuple, Union
 
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
@@ -8,6 +8,19 @@ from .parsing import from_lines, parse_playlist
 from .stats import Stats
 from .status import Status
 from .util import has_any_prefix
+
+
+PlaylistInfoArg = Union[None, int, Tuple[int, int]]
+
+
+def playlist_info_arg(arg: PlaylistInfoArg) -> str:
+    '''Make argument string for playlist_info optional arguments.'''
+    if arg is None:
+        return ''
+    if isinstance(arg, int):
+        return f' {arg}'
+    start, end = arg
+    return f' {start}:{end}'
 
 
 class MPDClient(BaseMPDClient):
@@ -50,11 +63,20 @@ class MPDClient(BaseMPDClient):
         result = await self.run_command('stats')
         return from_lines(Stats, result)
 
-    async def playlist_info(self) -> List[Song]:
+    async def playlist_info(
+            self,
+            position_or_range: PlaylistInfoArg
+    ) -> List[Song]:
         '''Get information about every song in the current playlist.
+
+        Args:
+            position_or_range: either an integer pointing to a specific
+                               position in the playlist or an interval.
 
         Returns:
             A list of Song objects representing the current playlist.
         '''
-        result = await self.run_command('playlistinfo')
+        arg = playlist_info_arg(position_or_range)
+
+        result = await self.run_command(f'playlistinfo{arg}')
         return parse_playlist(result)
