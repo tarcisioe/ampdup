@@ -1,8 +1,10 @@
 '''MPD Client module.'''
+from typing import List
+
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
 from .song import Song
-from .parsing import from_lines
+from .parsing import from_lines, parse_playlist
 from .stats import Stats
 from .status import Status
 from .util import has_any_prefix
@@ -11,7 +13,7 @@ from .util import has_any_prefix
 class MPDClient(BaseMPDClient):
     '''An async MPD Client object for any operations except idle/noidle.'''
 
-    async def run_command(self, command: str):
+    async def run_command(self, command: str) -> List[str]:
         if has_any_prefix(command, ('idle', 'noidle')):
             raise ClientTypeError('Use an IdleClient to use the idle command.')
 
@@ -47,3 +49,12 @@ class MPDClient(BaseMPDClient):
         '''
         result = await self.run_command('stats')
         return from_lines(Stats, result)
+
+    async def playlist_info(self) -> List[Song]:
+        '''Get information about every song in the current playlist.
+
+        Returns:
+            A list of Song objects representing the current playlist.
+        '''
+        result = await self.run_command('playlistinfo')
+        return parse_playlist(result)

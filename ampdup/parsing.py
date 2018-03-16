@@ -1,7 +1,8 @@
 '''MPD output parsing utilities.'''
-from typing import List, Tuple
+from typing import Iterable, List, Tuple
 
-from .util import from_json_like
+from .song import Song
+from .util import from_json_like, split_on
 
 
 def normalize(name: str) -> str:
@@ -31,8 +32,19 @@ def split_item(item: str) -> Tuple[str, str]:
     return lhs.strip(), rhs.strip()
 
 
-def from_lines(cls: type, lines: List[str]):
+def from_lines(cls: type, lines: Iterable[str]):
     '''Make a `cls` object from a list of lines in MPD output format.'''
     values = (split_item(l) for l in lines)
     normalized = {normalize(k): v for k, v in values}
     return from_json_like(cls, normalized)
+
+
+def is_file(line: str) -> bool:
+    '''Check if a return line is a song file.'''
+    return line.startswith('file:')
+
+
+def parse_playlist(lines: Iterable[str]) -> List[Song]:
+    '''Parse playlist information into a list of songs.'''
+    split = split_on(is_file, lines)
+    return [from_lines(Song, song_info) for song_info in split]
