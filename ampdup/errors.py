@@ -1,5 +1,6 @@
 '''Classes for raising when errors happen.'''
-from typing import List
+from enum import Enum
+from typing import Callable, Dict, List
 
 from dataclasses import dataclass
 
@@ -8,9 +9,27 @@ __all__ = [
     'MPDError',
     'ConnectionFailedError',
     'ClientTypeError',
-    'CommandError',
     'NoCurrentSongError',
+    'CommandError',
+    'URINotFoundError',
 ]
+
+
+class ErrorCode(Enum):
+    '''MPD Error codes included in ACK responses.'''
+    NOT_LIST = 1
+    ARG = 2
+    PASSWORD = 3
+    PERMISSION = 4
+    UNKNOWN = 5
+
+    NO_EXIST = 50
+    PLAYLIST_MAX = 51
+    SYSTEM = 52
+    PLAYLIST_LOAD = 53
+    UPDATE_ALREADY = 54
+    PLAYER_SYNC = 55
+    EXIST = 56
 
 
 class MPDError(Exception):
@@ -45,13 +64,46 @@ class CommandError(MPDError):
         partial: The (maybe empty) list of lines representing a partial
                  response.
     '''
-    code: int
+    code: ErrorCode
     line: int
     command: str
     message: str
     partial: List[str]
 
     def __post_init__(self):
+        codetext = f'{self.code.name}/{self.code.value}'
         super().__init__(
-            f'[{self.code}@{self.line}] {{{self.command}}} {self.message}'
+            f'[{codetext}@{self.line}] {{{self.command}}} {self.message}'
         )
+
+
+class URINotFoundError(CommandError):
+    '''Wraps an error 50 from MPD.'''
+    def __init__(self, *args):
+        super().__init__(ErrorCode.NO_EXIST, *args)
+
+
+ErrorFactory = Callable[[int, str, str, List[str]], CommandError]
+
+
+ERRORS: Dict[ErrorCode, ErrorFactory] = {
+    ErrorCode.NO_EXIST: URINotFoundError,
+}
+
+
+def get_error_constructor(error_code: ErrorCode) -> ErrorFactory:
+    '''Get the error constructor for an error code, or a generic one.
+
+    If the error code is not mapped to an exception type, a factory function
+    for CommandError with the correct code is returned.
+
+    Args:
+        error_code: The error code from MPD.
+
+    Returns:
+        A function that constructs the correct exception with the remaining
+        arguments.
+    '''
+    return (ERRORS.get(error_code) or
+            ERRORS.setdefault(error_code,
+                              lambda *args: CommandError(error_code, *args)))
