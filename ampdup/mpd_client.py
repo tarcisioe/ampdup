@@ -65,7 +65,7 @@ class MPDClient(BaseMPDClient):
 
     async def playlist_info(
             self,
-            position_or_range: PlaylistInfoArg
+            position_or_range: PlaylistInfoArg = None
     ) -> List[Song]:
         '''Get information about every song in the current playlist.
 
@@ -76,7 +76,10 @@ class MPDClient(BaseMPDClient):
         Returns:
             A list of Song objects representing the current playlist.
         '''
-        arg = playlist_info_arg(position_or_range)
+        arg = ''
+
+        if position_or_range is not None:
+            arg = playlist_info_arg(position_or_range)
 
         result = await self.run_command(f'playlistinfo{arg}')
         return parse_playlist(result)
