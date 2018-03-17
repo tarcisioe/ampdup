@@ -1,3 +1,5 @@
+import shlex
+
 from typing import Any, List
 
 from ampdup import CommandError, IdleMPDClient, MPDClient, MPDError
@@ -43,6 +45,14 @@ def parse_playlist_info_args(argstring):
 def parse_args(command: str, argstring: str) -> List[Any]:
     if command == 'playlist_info':
         return parse_playlist_info_args(argstring)
+    if command == 'add':
+        return shlex.split(argstring)
+    if command == 'add_id':
+        uri, *pos = shlex.split(argstring)
+        if pos:
+            pos_arg, = pos
+            position = int(pos_arg)
+        return [uri, position]
     return [argstring]
 
 
