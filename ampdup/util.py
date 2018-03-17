@@ -5,9 +5,7 @@ from enum import Enum, EnumMeta
 from functools import lru_cache
 from itertools import groupby
 from operator import itemgetter
-from typing import (
-    Any, Callable, Iterable, Iterator, List, Sequence, Tuple, TypeVar, Union
-)
+from typing import Any, Callable, Iterable, List, Sequence, Tuple, TypeVar
 
 
 if sys.version_info < (3, 7):
@@ -19,14 +17,6 @@ else:
 __all__ = [
     'asynccontextmanager',
 ]
-
-
-class NothingType:
-    '''Class to represent nothing when None may be a value.'''
-    pass
-
-
-Nothing = NothingType()
 
 
 class NoCommonTypeError(Exception):
@@ -153,15 +143,6 @@ T = TypeVar('T')
 Predicate = Callable[[T], bool]
 
 
-def safe_next(it: Iterator[T]) -> Union[T, NothingType]:
-    '''Get the next from an iterator with no StopIteration nor None.
-
-    Returns:
-        The next value in the iterator or a value representing truly nothing.
-    '''
-    return next(it, Nothing)
-
-
 def enumerate_on(pred: Predicate,
                  iterable: Iterable[T],
                  begin: int = 0) -> Iterable[Tuple[int, T]]:
@@ -182,9 +163,9 @@ def enumerate_on(pred: Predicate,
 
     it = iter(iterable)
 
-    first = safe_next(it)
-
-    if isinstance(first, NothingType):
+    try:
+        first = next(it)
+    except StopIteration:
         return
 
     yield i, first
