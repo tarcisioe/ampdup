@@ -4,7 +4,7 @@ from typing import List, Tuple, Union
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
 from .song import Song
-from .parsing import from_lines, parse_playlist, split_item
+from .parsing import from_lines, parse_playlist, parse_single
 from .stats import Stats
 from .status import Status
 from .util import has_any_prefix
@@ -105,9 +105,8 @@ class MPDClient(BaseMPDClient):
         '''
         pos = '' if position is None else f' {position}'
 
-        result, = await self.run_command(f'addid "{song_uri}"{pos}')
-        _, song_id = split_item(result)
-        return int(song_id)
+        result = await self.run_command(f'addid "{song_uri}"{pos}')
+        return parse_single(result, int)
 
     async def update(self, uri: str = None) -> int:
         '''Update the database.
@@ -119,6 +118,18 @@ class MPDClient(BaseMPDClient):
         Returns:
             The id of the update job.
         '''
-        result, = await self.run_command(f'update "{uri}"')
-        _, job_id = split_item(result)
-        return int(job_id)
+        result = await self.run_command(f'update "{uri}"')
+        return parse_single(result, int)
+
+    async def rescan(self, uri: str = None) -> int:
+        '''Update the database rescanning unmodified files as well.
+
+        Args:
+            uri: An optional URI to specify which file or directory to update.
+                 If omitted, everything is updated.
+
+        Returns:
+            The id of the update job.
+        '''
+        result = await self.run_command(f'rescan "{uri}"')
+        return parse_single(result, int)

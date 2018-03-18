@@ -1,7 +1,7 @@
 '''MPD output parsing utilities.'''
 import re
 
-from typing import Iterable, List, Tuple
+from typing import overload, Callable, Iterable, List, Tuple, TypeVar, Union
 
 from .errors import ErrorCode, get_error_constructor
 from .song import Song
@@ -12,6 +12,7 @@ __all__ = [
     'normalize',
     'split_item',
     'from_lines',
+    'parse_single',
     'parse_playlist',
     'parse_error',
 ]
@@ -51,18 +52,7 @@ def from_lines(cls: type, lines: Iterable[str]):
     return from_json_like(cls, normalized)
 
 
-def is_file(line: str) -> bool:
-    '''Check if a return line is a song file.'''
-    return line.startswith('file:')
-
-
-def parse_playlist(lines: Iterable[str]) -> List[Song]:
-    '''Parse playlist information into a list of songs.'''
-    split = split_on(is_file, lines)
-    return [from_lines(Song, song_info) for song_info in split]
-
-
-ERROR_RE = re.compile(r'ACK\s+\[(\d+)@(\d+)\]\s+\{(.*)\}\s+(.*)')
+T = TypeVar('T')
 
 
 def parse_error(error_line: str, partial: List[str]):
@@ -84,3 +74,54 @@ def parse_error(error_line: str, partial: List[str]):
                                              command,
                                              message,
                                              partial)
+
+
+@overload
+def parse_single(
+        lines: Iterable[str]  # pylint: disable=unused-argument
+) -> str:
+    '''Overload.'''
+    pass
+
+
+@overload  # noqa: F811
+def parse_single(  # pylint: disable=function-redefined
+        lines: Iterable[str],  # pylint: disable=unused-argument
+        cast: Callable[[str], T]  # pylint: disable=unused-argument
+) -> T:
+    '''Overload.'''
+    pass
+
+
+def parse_single(  # noqa: F811, pylint: disable=function-redefined
+        lines: Iterable[str],
+        cast: Callable[[str], T] = None
+) -> Union[str, T]:
+    '''Parse a single return value and discard its name.
+
+    Args:
+        lines: The return from MPD as a list of a single line.
+        cast: An optional function to read the string into another type.
+
+    Returns:
+        The value as a string or converted into the chosen type.
+    '''
+    result, = lines
+    _, value = split_item(result)
+    if cast is None:
+        return value
+    return cast(value)
+
+
+def is_file(line: str) -> bool:
+    '''Check if a return line is a song file.'''
+    return line.startswith('file:')
+
+
+def parse_playlist(lines: Iterable[str]) -> List[Song]:
+    '''Parse playlist information into a list of songs.'''
+    split = split_on(is_file, lines)
+    return [from_lines(Song, song_info) for song_info in split]
+
+
+ERROR_RE = re.compile(r'ACK\s+\[(\d+)@(\d+)\]\s+\{(.*)\}\s+(.*)')

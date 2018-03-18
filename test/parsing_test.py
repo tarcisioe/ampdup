@@ -1,4 +1,4 @@
-from ampdup.parsing import normalize, parse_error
+from ampdup.parsing import normalize, parse_error, parse_single
 from ampdup.errors import ErrorCode, CommandError, URINotFoundError
 
 
@@ -34,3 +34,17 @@ def test_parse_not_found_error():
                                 [])
 
     assert parse_error(ack_line, []) == expected
+
+
+def test_parse_single_result():
+    '''Parse a single result.'''
+    result = ['name: value']
+
+    assert parse_single(result) == 'value'
+
+
+def test_parse_single_typed_result():
+    '''Parse a single result and convert.'''
+    result = ['name: 42']
+
+    assert parse_single(result, int) == 42
