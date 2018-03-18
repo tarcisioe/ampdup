@@ -1,10 +1,11 @@
 '''Utility module.'''
-
 import sys
 
 from enum import Enum, EnumMeta
 from functools import lru_cache
-from typing import Any, List, Sequence
+from itertools import groupby
+from operator import itemgetter
+from typing import Any, Callable, Iterable, List, Sequence, Tuple, TypeVar
 
 
 if sys.version_info < (3, 7):
@@ -110,17 +111,19 @@ def from_json_like(cls, j):
     Returns:
         cls: An object of type `cls`.
     '''
+    if any(cls is t for t in (int, float)):
+        return cls(j)
+    if cls is str:
+        return j
+    if cls is bool:
+        return cls(int(j))
     if is_namedtuple(cls):
         return from_dict(cls, j)
-    if issubclass(cls, List):
-        return from_list(cls, j)
     if issubclass(cls, Enum):
         return cls(underlying_type(cls)(j))
-    if issubclass(cls, bool):
-        return cls(int(j))
-    if any(issubclass(cls, t) for t in (int, float)):
-        return cls(j)
-    return j
+    if issubclass(cls, List):
+        return from_list(cls, j)
+    raise TypeError(f'{j} cannot be converted into {cls}.')
 
 
 def has_any_prefix(s: str, prefixes: Sequence[str]) -> bool:
@@ -134,3 +137,63 @@ def has_any_prefix(s: str, prefixes: Sequence[str]) -> bool:
         Whether the string matches any of the prefixes.
     '''
     return any(s.startswith(prefix) for prefix in prefixes)
+
+
+T = TypeVar('T')
+Predicate = Callable[[T], bool]
+
+
+def enumerate_on(pred: Predicate,
+                 iterable: Iterable[T],
+                 begin: int = 0) -> Iterable[Tuple[int, T]]:
+    '''Generate enumerated tuples based on sentinel elements in an iterable.
+
+    A sentinel element is one for which `pred` is `True`. From it onwards the
+    enumeration is incremented.
+
+    Args:
+        pred: A predicate identifying a sentinel element.
+        iterable: An iterable to enumerate.
+        begin: where to begin the enumeration.
+
+    Returns:
+        The enumerated iterable of tuples.
+    '''
+    i = begin
+
+    it = iter(iterable)
+
+    try:
+        first = next(it)
+    except StopIteration:
+        return
+
+    yield i, first
+
+    for e in it:
+        if pred(e):
+            i += 1
+        yield i, e
+
+
+def split_on(pred: Predicate,
+             iterable: Iterable[T]) -> Iterable[Iterable[T]]:
+    '''Split an iterable based on sentnel elements.
+
+    A sentinel element is one for which `pred` is `True`. From it onwards a
+    new split is made.
+
+    Args:
+        pred: A predicate identifying a sentinel element.
+        iterable: An iterable to enumerate.
+
+    Returns:
+        An iterable with an iterable for each split.
+    '''
+
+    enumerated = enumerate_on(pred,
+                              iterable)
+
+    return ((line for _, line in group)
+            for _, group in groupby(enumerated,
+                                    key=itemgetter(0)))
