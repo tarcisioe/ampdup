@@ -108,3 +108,17 @@ class MPDClient(BaseMPDClient):
         result, = await self.run_command(f'addid "{song_uri}"{pos}')
         _, song_id = split_item(result)
         return int(song_id)
+
+    async def update(self, uri: str = None) -> int:
+        '''Update the database.
+
+        Args:
+            uri: An optional URI to specify which file or directory to update.
+                 If omitted, everything is updated.
+
+        Returns:
+            The id of the update job.
+        '''
+        result, = await self.run_command(f'update "{uri}"')
+        _, job_id = split_item(result)
+        return int(job_id)

@@ -49,6 +49,13 @@ def one_uri(argstring: str) -> List[Any]:
     return args
 
 
+def one_optional_uri(argstring: str) -> List[Any]:
+    if not argstring:
+        return []
+
+    return one_uri(argstring)
+
+
 def add_id_args(argstring: str) -> List[Any]:
     try:
         uri, *pos = shlex.split(argstring)
@@ -75,6 +82,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'playlist_info': parse_playlist_info_args,
     'status': no_args,
     'stats': no_args,
+    'update': one_optional_uri,
 }
 
 
