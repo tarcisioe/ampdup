@@ -5,6 +5,7 @@ from typing import List
 
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError
+from .parsing import split_item
 from .util import has_any_prefix
 
 
@@ -53,9 +54,9 @@ class IdleMPDClient(BaseMPDClient):
         subsystem_names = [s.value for s in subsystems]
         command = ' '.join(['idle', *subsystem_names])
 
-        changed = await self.run_command(command)
+        changed = (split_item(i) for i in await self.run_command(command))
 
-        return [Subsystem(c.lstrip('changed: ')) for c in changed]
+        return [Subsystem(s) for _, s in changed]
 
     async def noidle(self):
         '''Cancel the current idle command.'''
