@@ -84,6 +84,10 @@ class MPDClient(BaseMPDClient):
         result = await self.run_command(f'playlistinfo{arg}')
         return parse_playlist(result)
 
+    async def clear(self):
+        '''Clears the current playlist.'''
+        await self.run_command('clear')
+
     async def add(self, uri: str):
         '''Add a directory or a file to the current playlist.
 

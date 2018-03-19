@@ -71,13 +71,17 @@ def add_id_args(argstring: str) -> List[Any]:
     return [uri]
 
 
-def no_args(_: str) -> List[Any]:
+def no_args(argstring: str) -> List[Any]:
+    if argstring:
+        raise CommandSyntaxError('takes no arguments.')
+
     return []
 
 
 PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'add': one_uri,
     'add_id': add_id_args,
+    'clear': no_args,
     'current_song': no_args,
     'playlist_info': parse_playlist_info_args,
     'status': no_args,
