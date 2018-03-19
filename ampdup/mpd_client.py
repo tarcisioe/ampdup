@@ -140,7 +140,7 @@ class MPDClient(BaseMPDClient):
         await self.run_command(f'deleteid {song_id}')
 
     async def move(self, what: PositionOrRange, to: int):
-        '''Move a song or a range to another position in the playlist..
+        '''Move a song or a range to another position in the playlist.
 
         Args:
             what: A position or range of songs to move.
@@ -150,6 +150,19 @@ class MPDClient(BaseMPDClient):
         what_arg = position_or_range_arg(what)
 
         await self.run_command(f'move {what_arg} {to}')
+
+    async def move_id(self, song_id: SongId, to: int):
+        '''Move a song by its id to a position in the playlist.
+
+        If to is negative, it is relative to the current song in the playlist
+        (if there is one).
+
+        Args:
+            song_id: An id of a song in the playlist.
+            to: The position on the current state of the playlist where the
+                songs should be moved to.
+        '''
+        await self.run_command(f'moveid {song_id} {to}')
 
     async def update(self, uri: str = None) -> int:
         '''Update the database.

@@ -103,6 +103,16 @@ def from_and_to(argstring: str) -> List[Any]:
         ) from e
 
 
+def two_ints(argstring: str) -> List[Any]:
+    try:
+        x, y = shlex.split(argstring)
+        return [int(x), int(y)]
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes two integers.'
+        ) from e
+
+
 PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'add': one_uri,
     'add_id': add_id_args,
@@ -111,6 +121,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'delete_id': one_id,
     'current_song': no_args,
     'move': from_and_to,
+    'move_id': two_ints,
     'playlist_info': optional(position_or_range),
     'status': no_args,
     'stats': no_args,
