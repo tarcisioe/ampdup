@@ -138,6 +138,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'playlist_info': optional(position_or_range),
     'shuffle': optional(range_arg),
     'swap': two_ints('takes two song positions.'),
+    'swap_id': two_ints('takes two song ids.'),
     'status': no_args,
     'stats': no_args,
     'update': optional(one_uri),

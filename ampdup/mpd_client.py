@@ -198,10 +198,19 @@ class MPDClient(BaseMPDClient):
         '''Swap two songs.
 
         Args:
-            s1: the first song's position
-            s2: the second song's position
+            s1: the first song's position.
+            s2: the second song's position.
         '''
         await self.run_command(f'swap {s1} {s2}')
+
+    async def swap_id(self, s1: SongId, s2: SongId):
+        '''Swap two songs by id.
+
+        Args:
+            s1: the first song's id.
+            s2: the second song's id.
+        '''
+        await self.run_command(f'swapid {s1} {s2}')
 
     async def update(self, uri: str = None) -> int:
         '''Update the database.
