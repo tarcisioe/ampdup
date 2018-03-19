@@ -7,6 +7,8 @@ from itertools import groupby
 from operator import itemgetter
 from typing import Any, Callable, Iterable, List, Sequence, Tuple, TypeVar
 
+from .song import TimeRange
+
 
 if sys.version_info < (3, 7):
     from aiocontext import async_contextmanager as asynccontextmanager
@@ -101,6 +103,19 @@ def from_dict(cls, d):
                   for i, v in d.items()})
 
 
+def time_range(s: str) -> TimeRange:
+    '''Parse a time range from a song metadata.
+
+    Args:
+        s: The time range as a string.
+
+    Returns:
+        A (float, float) tuple with offsets in seconds.
+    '''
+    start, end = s.split('-')
+    return float(start), float(end)
+
+
 def from_json_like(cls, j):
     '''Make an object from a JSON-like value, recursively, based on type hints.
 
@@ -117,6 +132,8 @@ def from_json_like(cls, j):
         return cls(j)
     if cls is str:
         return j
+    if cls is TimeRange:
+        return time_range(j)
     if is_namedtuple(cls):
         return from_dict(cls, j)
     if issubclass(cls, Enum):
