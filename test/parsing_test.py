@@ -10,7 +10,7 @@ def test_normalize():
 
 
 def test_parse_unknown_command_error():
-    '''Parse a URI not found error.'''
+    '''Parse an unknown command error.'''
 
     ack_line = 'ACK [5@0] {} unknown command "aaa"'
 
