@@ -37,6 +37,13 @@ def one_uri(argstring: str) -> List[Any]:
         raise CommandSyntaxError('takes exactly one URI.')
     return args
 
+def one_id(argstring: str) -> List[Any]:
+    try:
+        return [int(argstring)]
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes a song id (integer).'
+        ) from e
 
 def add_id_args(argstring: str) -> List[Any]:
     try:
@@ -83,6 +90,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'add_id': add_id_args,
     'clear': no_args,
     'delete': position_or_range,
+    'delete_id': one_id,
     'current_song': no_args,
     'playlist_info': optional(position_or_range),
     'status': no_args,

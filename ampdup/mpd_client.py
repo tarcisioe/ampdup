@@ -131,6 +131,14 @@ class MPDClient(BaseMPDClient):
 
         await self.run_command(f'delete{arg}')
 
+    async def delete_id(self, song_id: int):
+        '''Delete a song by its id.
+
+        Args
+            id: a song id.
+        '''
+        await self.run_command(f'deleteid {song_id}')
+
     async def update(self, uri: str = None) -> int:
         '''Update the database.
 
