@@ -10,7 +10,8 @@ from .status import Status
 from .util import has_any_prefix
 
 
-PositionOrRange = Union[int, Tuple[int, int]]
+Range = Tuple[int, int]
+PositionOrRange = Union[int, Range]
 
 
 def position_or_range_arg(arg: Optional[PositionOrRange]) -> str:
@@ -181,6 +182,17 @@ class MPDClient(BaseMPDClient):
 
         result = await self.run_command(f'playlistinfo{arg}')
         return parse_playlist(result)
+
+    async def shuffle(self, shuffle_range: Optional[Range] = None):
+        '''Shuffle the current playlist.
+
+        Args:
+            shuffle_range: An optional range to shuffle. If ommitted, shuffles
+                           the whole playlist.
+        '''
+        arg = position_or_range_arg(shuffle_range)
+
+        await self.run_command(f'shuffle{arg}')
 
     async def update(self, uri: str = None) -> int:
         '''Update the database.
