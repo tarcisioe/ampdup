@@ -7,3 +7,4 @@ pylint-quotes
 pytest
 pytest-cov
 mypy
+wrapt

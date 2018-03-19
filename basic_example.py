@@ -1,32 +1,21 @@
 import shlex
 
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Tuple
 
-from ampdup import CommandError, IdleMPDClient, MPDClient, MPDError
 from curio import run
 from curio.task import spawn, TaskCancelled
 from curio.workers import run_in_thread
+from wrapt import decorator
 
-
-async def monitor(client: IdleMPDClient):
-    try:
-        while True:
-            changes = await client.idle()
-            for line in changes:
-                print(line)
-    except TaskCancelled:
-        return
+from ampdup import CommandError, IdleMPDClient, MPDClient, MPDError
 
 
 class CommandSyntaxError(MPDError):
     pass
 
 
-def parse_playlist_info_args(argstring: str) -> List[Any]:
+def position_or_range(argstring: str) -> List[Any]:
     numbers = argstring.split(':')
-
-    if not numbers:
-        return []
 
     try:
         if len(numbers) == 1:
@@ -49,13 +38,6 @@ def one_uri(argstring: str) -> List[Any]:
     return args
 
 
-def one_optional_uri(argstring: str) -> List[Any]:
-    if not argstring:
-        return []
-
-    return one_uri(argstring)
-
-
 def add_id_args(argstring: str) -> List[Any]:
     try:
         uri, *pos = shlex.split(argstring)
@@ -71,6 +53,24 @@ def add_id_args(argstring: str) -> List[Any]:
     return [uri]
 
 
+ArgFunc = Callable[[str], List[Any]]
+
+
+@decorator
+def optional_dec(wrapped: ArgFunc,
+                 _: Any,
+                 args: Tuple[str],
+                 _2: Dict[str, Any]) -> List[Any]:
+    if args == ('',):
+        return []
+
+    return wrapped(*args)
+
+
+def optional(argfunc: ArgFunc) -> ArgFunc:
+    return optional_dec(argfunc)  # pylint: disable=no-value-for-parameter
+
+
 def no_args(argstring: str) -> List[Any]:
     if argstring:
         raise CommandSyntaxError('takes no arguments.')
@@ -82,11 +82,12 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'add': one_uri,
     'add_id': add_id_args,
     'clear': no_args,
+    'delete': position_or_range,
     'current_song': no_args,
-    'playlist_info': parse_playlist_info_args,
+    'playlist_info': optional(position_or_range),
     'status': no_args,
     'stats': no_args,
-    'update': one_optional_uri,
+    'update': optional(one_uri),
 }
 
 
@@ -130,6 +131,17 @@ async def commands(client: MPDClient):
                     print(line)
             else:
                 print(result)
+
+
+async def monitor(client: IdleMPDClient):
+    try:
+        while True:
+            changes = await client.idle()
+            for line in changes:
+                print(line)
+    except TaskCancelled:
+        return
+
 
 
 async def main():
