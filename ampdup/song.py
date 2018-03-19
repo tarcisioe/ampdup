@@ -11,9 +11,12 @@ class Song(NamedTuple):
     pos: int
     id: int
     artist: str = ''
+    artistsort: str = ''
     albumartist: str = ''
+    albumartistsort: str = ''
     title: str = ''
     album: str = ''
+    albumsort: str = ''
     genre: str = ''
     disc: int = None
     track: int = None

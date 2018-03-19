@@ -23,6 +23,9 @@ class CommandSyntaxError(MPDError):
 def parse_playlist_info_args(argstring):
     numbers = argstring.split(':')
 
+    if not numbers:
+        return []
+
     try:
         if len(numbers) == 1:
             return [int(*numbers)]
