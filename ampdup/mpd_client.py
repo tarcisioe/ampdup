@@ -3,7 +3,7 @@ from typing import List, Tuple, Union, Optional
 
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
-from .song import Song
+from .song import Song, SongId
 from .parsing import from_lines, parse_playlist, parse_single
 from .stats import Stats
 from .status import Status
@@ -101,7 +101,7 @@ class MPDClient(BaseMPDClient):
         '''
         await self.run_command(f'add "{uri}"')
 
-    async def add_id(self, song_uri: str, position: int = None) -> int:
+    async def add_id(self, song_uri: str, position: int = None) -> SongId:
         '''Add a directory or a file to the current playlist.
 
         Args:
@@ -115,7 +115,7 @@ class MPDClient(BaseMPDClient):
         pos = '' if position is None else f' {position}'
 
         result = await self.run_command(f'addid "{song_uri}"{pos}')
-        return parse_single(result, int)
+        return parse_single(result, SongId)
 
     async def delete(
             self,
@@ -131,7 +131,7 @@ class MPDClient(BaseMPDClient):
 
         await self.run_command(f'delete{arg}')
 
-    async def delete_id(self, song_id: int):
+    async def delete_id(self, song_id: SongId):
         '''Delete a song by its id.
 
         Args

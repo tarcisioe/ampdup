@@ -111,12 +111,12 @@ def from_json_like(cls, j):
     Returns:
         cls: An object of type `cls`.
     '''
-    if any(cls is t for t in (int, float)):
+    if cls is bool:
+        return cls(int(j))
+    if any(issubclass(cls, t) for t in (int, float)):
         return cls(j)
     if cls is str:
         return j
-    if cls is bool:
-        return cls(int(j))
     if is_namedtuple(cls):
         return from_dict(cls, j)
     if issubclass(cls, Enum):

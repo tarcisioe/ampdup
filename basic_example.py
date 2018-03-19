@@ -37,6 +37,7 @@ def one_uri(argstring: str) -> List[Any]:
         raise CommandSyntaxError('takes exactly one URI.')
     return args
 
+
 def one_id(argstring: str) -> List[Any]:
     try:
         return [int(argstring)]
@@ -44,6 +45,7 @@ def one_id(argstring: str) -> List[Any]:
         raise CommandSyntaxError(
             'takes a song id (integer).'
         ) from e
+
 
 def add_id_args(argstring: str) -> List[Any]:
     try:
@@ -151,9 +153,8 @@ async def monitor(client: IdleMPDClient):
         return
 
 
-
 async def main():
-    async with MPDClient.make('localhost', 6600) as m, IdleMPDClient.make('localhost', 6600) as i:
+    async with MPDClient.make('localhost', 6600) as m, IdleMPDClient.make('localhost', 6600) as i:  # noqa
         idle = await spawn(monitor(i))
         await commands(m)
         await idle.cancel()

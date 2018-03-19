@@ -2,6 +2,11 @@
 from typing import NamedTuple
 
 
+class SongId(int):
+    '''Strong alias for song ids.'''
+    pass
+
+
 class Song(NamedTuple):
     '''Type representing the static data about a playable song in MPD.'''
     file: str
@@ -9,7 +14,7 @@ class Song(NamedTuple):
     time: int
     duration: float
     pos: int
-    id: int
+    id: SongId
     artist: str = ''
     artistsort: str = ''
     albumartist: str = ''
