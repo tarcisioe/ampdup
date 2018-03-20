@@ -105,5 +105,4 @@ def get_error_constructor(error_code: ErrorCode) -> ErrorFactory:
         arguments.
     '''
     return (ERRORS.get(error_code) or
-            ERRORS.setdefault(error_code,
-                              lambda *args: CommandError(error_code, *args)))
+            (lambda *args: CommandError(error_code, *args)))
