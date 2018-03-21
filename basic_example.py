@@ -1,3 +1,5 @@
+import shlex
+
 from typing import Any, List
 
 from ampdup import CommandError, IdleMPDClient, MPDClient, MPDError
@@ -21,6 +23,9 @@ class CommandSyntaxError(MPDError):
 
 
 def parse_playlist_info_args(argstring):
+    if not argstring:
+        return []
+
     numbers = argstring.split(':')
 
     if not numbers:
@@ -40,9 +45,23 @@ def parse_playlist_info_args(argstring):
     )
 
 
-def parse_args(command: str, argstring: str) -> List[Any]:
+def parse_args(command: str, argstring: str = None) -> List[Any]:
+    if argstring is None:
+        argstring = ''
+
     if command == 'playlist_info':
         return parse_playlist_info_args(argstring)
+    if command == 'add':
+        args = shlex.split(argstring)
+        if len(args) != 1:
+            raise CommandSyntaxError('add takes exactly one URI.')
+        return args
+    if command == 'add_id':
+        uri, *pos = shlex.split(argstring)
+        if pos:
+            pos_arg, = pos
+            position = int(pos_arg)
+        return [uri, position]
     return [argstring]
 
 
@@ -59,17 +78,16 @@ async def commands(client: MPDClient):
             m = getattr(client, method, None)
 
             if m is not None:
-                if argstring:
-                    args = parse_args(method, *argstring)
-                else:
-                    args = []
+                args = parse_args(method, *argstring)
                 result = await m(*args)
             else:
                 result = await client.run_command(command.strip('!'))
         except CommandError as e:
-            print(f'Error {e.code}: {e.message}')
+            exc_name = type(e).__name__
+            print(f'{exc_name}: {e.code.value} ({e.code.name}) @ {e.command}: {e.message}')
         except MPDError as e:
-            print(e)
+            exc_name = type(e).__name__
+            print(f'{exc_name}: {str(e)}')
         else:
             if isinstance(result, List):
                 for line in result:

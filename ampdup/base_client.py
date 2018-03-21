@@ -1,5 +1,3 @@
-import re
-
 from typing import AsyncGenerator, List
 
 from dataclasses import dataclass, field
@@ -9,16 +7,8 @@ from curio.queue import Queue
 from curio.task import spawn, Task, TaskCancelled
 
 from .connection import Connection
-from .errors import CommandError
+from .parsing import parse_error
 from .util import asynccontextmanager
-
-
-ERROR_RE = re.compile(r'ACK\s+\[(\d+)@(\d+)\]\s+\{(.*)\}\s+(.*)')
-
-
-def parse_error(error_line: str, partial: List[str]):
-    code, line, command, message = ERROR_RE.match(error_line).groups()
-    return CommandError(int(code), int(line), command, message, partial)
 
 
 @dataclass

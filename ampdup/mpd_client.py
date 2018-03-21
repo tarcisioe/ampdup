@@ -4,7 +4,7 @@ from typing import List, Tuple, Union
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
 from .song import Song
-from .parsing import from_lines, parse_playlist
+from .parsing import from_lines, parse_playlist, split_item
 from .stats import Stats
 from .status import Status
 from .util import has_any_prefix
@@ -83,3 +83,28 @@ class MPDClient(BaseMPDClient):
 
         result = await self.run_command(f'playlistinfo{arg}')
         return parse_playlist(result)
+
+    async def add(self, uri: str):
+        '''Add a directory or a file to the current playlist.
+
+        Args:
+            uri: The URI of what to add. Directories are added recursively.
+        '''
+        await self.run_command(f'add "{uri}"')
+
+    async def add_id(self, song_uri: str, position: int = None) -> int:
+        '''Add a directory or a file to the current playlist.
+
+        Args:
+            song_uri: The URI of the song to add. Must be a single file.
+            position: Position on the playlist where to add. End of playlist if
+                      omitted.
+
+        Returns:
+            The id of the added song.
+        '''
+        pos = '' if position is None else f' {position}'
+
+        result, = await self.run_command(f'addid "{song_uri}"{pos}')
+        _, song_id = split_item(result)
+        return int(song_id)
