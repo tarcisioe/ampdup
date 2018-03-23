@@ -1,20 +1,27 @@
 '''MPD Client module.'''
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional
 
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
-from .song import Song
+from .song import Song, SongId
 from .parsing import from_lines, parse_playlist, parse_single
 from .stats import Stats
 from .status import Status
 from .util import has_any_prefix
 
 
-PlaylistInfoArg = Union[None, int, Tuple[int, int]]
+PositionOrRange = Union[int, Tuple[int, int]]
 
 
-def playlist_info_arg(arg: PlaylistInfoArg) -> str:
-    '''Make argument string for playlist_info optional arguments.'''
+def position_or_range_arg(arg: Optional[PositionOrRange]) -> str:
+    '''Make argument string for commands that may take a position or a range.
+
+    Args:
+        arg: Either a position as an int or a range as a tuple.
+
+    Returns:
+        The correspondent string to the argument.
+    '''
     if arg is None:
         return ''
     if isinstance(arg, int):
@@ -65,21 +72,19 @@ class MPDClient(BaseMPDClient):
 
     async def playlist_info(
             self,
-            position_or_range: PlaylistInfoArg = None
+            position_or_range: Optional[PositionOrRange] = None,
     ) -> List[Song]:
         '''Get information about every song in the current playlist.
 
         Args:
             position_or_range: either an integer pointing to a specific
                                position in the playlist or an interval.
+                               If ommited, returns the whole playlist.
 
         Returns:
             A list of Song objects representing the current playlist.
         '''
-        arg = ''
-
-        if position_or_range is not None:
-            arg = playlist_info_arg(position_or_range)
+        arg = position_or_range_arg(position_or_range)
 
         result = await self.run_command(f'playlistinfo{arg}')
         return parse_playlist(result)
@@ -96,7 +101,7 @@ class MPDClient(BaseMPDClient):
         '''
         await self.run_command(f'add "{uri}"')
 
-    async def add_id(self, song_uri: str, position: int = None) -> int:
+    async def add_id(self, song_uri: str, position: int = None) -> SongId:
         '''Add a directory or a file to the current playlist.
 
         Args:
@@ -110,7 +115,29 @@ class MPDClient(BaseMPDClient):
         pos = '' if position is None else f' {position}'
 
         result = await self.run_command(f'addid "{song_uri}"{pos}')
-        return parse_single(result, int)
+        return parse_single(result, SongId)
+
+    async def delete(
+            self,
+            position_or_range: PositionOrRange,
+    ):
+        '''Delete songs from the playlist.
+
+        Args:
+            position_or_range: either an integer pointing to a specific
+                               position in the playlist or an interval.
+        '''
+        arg = position_or_range_arg(position_or_range)
+
+        await self.run_command(f'delete{arg}')
+
+    async def delete_id(self, song_id: SongId):
+        '''Delete a song by its id.
+
+        Args
+            id: a song id.
+        '''
+        await self.run_command(f'deleteid {song_id}')
 
     async def update(self, uri: str = None) -> int:
         '''Update the database.

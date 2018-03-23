@@ -3,6 +3,8 @@ from typing import NamedTuple
 
 from enum import Enum
 
+from .song import SongId
+
 
 class Single(Enum):
     '''"single" setting state.'''
@@ -30,14 +32,14 @@ class Status(NamedTuple):
     mixrampdb: float
     state: State
     song: int
-    songid: int
+    songid: SongId
     time: str
     elapsed: float
     bitrate: int
     duration: float
     audio: str
     nextsong: int
-    nextsongid: int
+    nextsongid: SongId
     error: str = None
     mixrampdelay: int = None
     updating_db: int = None
