@@ -71,13 +71,17 @@ def add_id_args(argstring: str) -> List[Any]:
     return [uri]
 
 
-def no_args(_: str) -> List[Any]:
+def no_args(argstring: str) -> List[Any]:
+    if argstring:
+        raise CommandSyntaxError('takes no arguments.')
+
     return []
 
 
 PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'add': one_uri,
     'add_id': add_id_args,
+    'clear': no_args,
     'current_song': no_args,
     'playlist_info': parse_playlist_info_args,
     'status': no_args,
@@ -114,10 +118,12 @@ async def commands(client: MPDClient):
                 result = await client.run_command(command.strip('!'))
         except CommandError as e:
             exc_name = type(e).__name__
-            print(f'{exc_name}: {e.code.value} ({e.code.name}) @ {e.command}: {e.message}')
+            exc_code = f'{e.code.value} ({e.code.name})'
+            exc_command = f' @ {e.command}' if e.command else ''
+            print(f'{exc_name}: {exc_code}{exc_command}: {e.message}')
         except MPDError as e:
             exc_name = type(e).__name__
-            print(f'{exc_name}: {command} {str(e)}')
+            print(f'{exc_name}: {method} {str(e)}')
         else:
             if isinstance(result, List):
                 for line in result:
