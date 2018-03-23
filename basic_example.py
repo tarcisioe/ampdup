@@ -87,6 +87,32 @@ def no_args(argstring: str) -> List[Any]:
     return []
 
 
+def from_and_to(argstring: str) -> List[Any]:
+    try:
+        start, end = shlex.split(argstring)
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes two arguments (from and to).'
+        )
+
+    try:
+        return [*position_or_range(start), int(end)]
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes an integer as the "to" argument.'
+        ) from e
+
+
+def two_ints(argstring: str) -> List[Any]:
+    try:
+        x, y = shlex.split(argstring)
+        return [int(x), int(y)]
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes two integers.'
+        ) from e
+
+
 PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'add': one_uri,
     'add_id': add_id_args,
@@ -94,6 +120,8 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'delete': position_or_range,
     'delete_id': one_id,
     'current_song': no_args,
+    'move': from_and_to,
+    'move_id': two_ints,
     'playlist_info': optional(position_or_range),
     'status': no_args,
     'stats': no_args,
