@@ -30,3 +30,4 @@ class Song(NamedTuple):
     track: int = None
     date: int = None
     range: TimeRange = None
+    prio: int = None
