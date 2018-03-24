@@ -14,6 +14,16 @@ class CommandSyntaxError(MPDError):
     pass
 
 
+def range_arg(argstring: str) -> List[Any]:
+    try:
+        x, y = [int(n) for n in argstring.split(':', maxsplit=1)]
+        return [(x, y)]
+    except ValueError:
+        raise CommandSyntaxError(
+            'takes a range (start:end).'
+        )
+
+
 def position_or_range(argstring: str) -> List[Any]:
     numbers = argstring.split(':')
 
@@ -124,6 +134,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'move_id': two_ints,
     'playlist_id': optional(one_id),
     'playlist_info': optional(position_or_range),
+    'shuffle': optional(range_arg),
     'status': no_args,
     'stats': no_args,
     'update': optional(one_uri),
