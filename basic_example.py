@@ -180,6 +180,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'current_song': no_args,
     'move': from_and_to,
     'move_id': two_ints('takes two song ids.'),
+    'playlist_find': tag_and_needle,
     'playlist_id': optional(one_id),
     'playlist_info': optional(position_or_range),
     'playlist_search': tag_and_needle,

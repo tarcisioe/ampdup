@@ -172,6 +172,20 @@ class MPDClient(BaseMPDClient):
         '''
         await self.run_command(f'moveid {song_id} {to}')
 
+    async def playlist_find(self, tag: Tag, needle: str) -> List[Song]:
+        '''Search strictly for `needle` among the `tag` values.
+
+        Args:
+            tag: Which tag to search for.
+            needle: What to search for.
+
+        Returns:
+        '''
+        result = await self.run_command(
+            f'playlistfind {tag.value} "{needle}"'
+        )
+        return parse_playlist(result)
+
     async def playlist_id(
             self,
             song_id: Optional[SongId] = None
