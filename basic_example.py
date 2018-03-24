@@ -122,6 +122,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'current_song': no_args,
     'move': from_and_to,
     'move_id': two_ints,
+    'playlist_id': optional(one_id),
     'playlist_info': optional(position_or_range),
     'status': no_args,
     'stats': no_args,

@@ -70,25 +70,6 @@ class MPDClient(BaseMPDClient):
         result = await self.run_command('stats')
         return from_lines(Stats, result)
 
-    async def playlist_info(
-            self,
-            position_or_range: Optional[PositionOrRange] = None,
-    ) -> List[Song]:
-        '''Get information about every song in the current playlist.
-
-        Args:
-            position_or_range: either an integer pointing to a specific
-                               position in the playlist or an interval.
-                               If ommited, returns the whole playlist.
-
-        Returns:
-            A list of Song objects representing the current playlist.
-        '''
-        arg = position_or_range_arg(position_or_range)
-
-        result = await self.run_command(f'playlistinfo{arg}')
-        return parse_playlist(result)
-
     async def clear(self):
         '''Clears the current playlist.'''
         await self.run_command('clear')
@@ -163,6 +144,43 @@ class MPDClient(BaseMPDClient):
                 songs should be moved to.
         '''
         await self.run_command(f'moveid {song_id} {to}')
+
+    async def playlist_id(
+            self,
+            song_id: Optional[SongId] = None
+    ) -> List[Song]:
+        '''Get information about a particular song in the playlist.
+
+        Args:
+            song_id: The id of the song to search for. If omitted,
+                     returns the whole playlist, like `playlist_info`.
+
+        Returns:
+            A list of Song objects representing the current playlist.
+        '''
+        arg = f' {song_id}' if song_id else ''
+
+        result = await self.run_command(f'playlistid{arg}')
+        return parse_playlist(result)
+
+    async def playlist_info(
+            self,
+            position_or_range: Optional[PositionOrRange] = None,
+    ) -> List[Song]:
+        '''Get information about every song in the current playlist.
+
+        Args:
+            position_or_range: either an integer pointing to a specific
+                               position in the playlist or an interval.
+                               If ommited, returns the whole playlist.
+
+        Returns:
+            A list of Song objects representing the current playlist.
+        '''
+        arg = position_or_range_arg(position_or_range)
+
+        result = await self.run_command(f'playlistinfo{arg}')
+        return parse_playlist(result)
 
     async def update(self, uri: str = None) -> int:
         '''Update the database.
