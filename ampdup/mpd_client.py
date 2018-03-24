@@ -252,6 +252,16 @@ class MPDClient(BaseMPDClient):
         )
         return parse_playlist(result)
 
+    async def prio_id(self, priority: int, song_id: SongId):
+        '''Set a song priority for random playback.
+
+        Args:
+            priority: A value between 0 and 255.
+            song_range: The range of songs in the playlist to change.
+        '''
+        result = await self.run_command(f'prioid {priority} {song_id}')
+        return parse_playlist(result)
+
     async def range_id(
             self,
             song_id: SongId,
