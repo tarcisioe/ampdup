@@ -1,4 +1,5 @@
 '''MPD Client module.'''
+from enum import Enum
 from typing import List, Tuple, Union, Optional
 
 from .base_client import BaseMPDClient
@@ -12,6 +13,31 @@ from .util import has_any_prefix
 
 Range = Tuple[int, int]
 PositionOrRange = Union[int, Range]
+
+
+class Tag(Enum):
+    '''Tags supported by MPD.'''
+    ARTIST = 'artist'
+    ARTISTSORT = 'artistsort'
+    ALBUM = 'album'
+    ALBUMSORT = 'albumsort'
+    ALBUMARTIST = 'albumartist'
+    ALBUMARTISTSORT = 'albumartistsort'
+    TITLE = 'title'
+    TRACK = 'track'
+    NAME = 'name'
+    GENRE = 'genre'
+    DATE = 'date'
+    COMPOSER = 'composer'
+    PERFORMER = 'performer'
+    COMMENT = 'comment'
+    DISC = 'disc'
+    MUSICBRAINZ_ARTISTID = 'musicbrainz_artistid'
+    MUSICBRAINZ_ALBUMID = 'musicbrainz_albumid'
+    MUSICBRAINZ_ALBUMARTISTID = 'musicbrainz_albumartistid'
+    MUSICBRAINZ_TRACKID = 'musicbrainz_trackid'
+    MUSICBRAINZ_RELEASETRACKID = 'musicbrainz_releasetrackid'
+    MUSICBRAINZ_WORKID = 'musicbrainz_workid'
 
 
 def position_or_range_arg(arg: Optional[PositionOrRange]) -> str:
@@ -181,6 +207,20 @@ class MPDClient(BaseMPDClient):
         arg = position_or_range_arg(position_or_range)
 
         result = await self.run_command(f'playlistinfo{arg}')
+        return parse_playlist(result)
+
+    async def playlist_search(self, tag: Tag, needle: str) -> List[Song]:
+        '''Search case-insensitively for `needle` among the `tag` values.
+
+        Args:
+            tag: Which tag to search for.
+            needle: What to search for.
+
+        Returns:
+        '''
+        result = await self.run_command(
+            f'playlistsearch {tag.value} "{needle}"'
+        )
         return parse_playlist(result)
 
     async def range_id(

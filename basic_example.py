@@ -7,7 +7,9 @@ from curio.task import spawn, TaskCancelled
 from curio.workers import run_in_thread
 from wrapt import decorator
 
-from ampdup import CommandError, IdleMPDClient, MPDClient, MPDError, SongId
+from ampdup import (
+    CommandError, IdleMPDClient, MPDClient, MPDError, SongId, Tag
+)
 
 
 class CommandSyntaxError(MPDError):
@@ -98,6 +100,24 @@ def id_and_timerange(argstring: str) -> List[Any]:
     return [song_id, (start, end)]
 
 
+def tag_and_needle(argstring: str) -> List[Any]:
+    try:
+        first, second = argstring.split()
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes two arguments (tag and needle).'
+        ) from e
+
+    try:
+        tag = Tag(first)
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'needs a supported tag.'
+        ) from e
+
+    return [tag, second]
+
+
 ArgFunc = Callable[[str], List[Any]]
 
 
@@ -162,6 +182,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'move_id': two_ints('takes two song ids.'),
     'playlist_id': optional(one_id),
     'playlist_info': optional(position_or_range),
+    'playlist_search': tag_and_needle,
     'range_id': id_and_timerange,
     'shuffle': optional(range_arg),
     'swap': two_ints('takes two song positions.'),
