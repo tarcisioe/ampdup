@@ -101,6 +101,14 @@ class MPDClient(BaseMPDClient):
 
     # Playback control
 
+    async def pause(self, pause: bool):
+        '''Pause or resume playback.
+
+        Args:
+            pause: Whether to pause (`True`) or resume (`False`).
+        '''
+        await self.run_command(f'pause {int(pause)}')
+
     async def play(self, pos: Optional[int] = None):
         '''Begin playback. If supplied, start at `pos` in the playlist.
 
