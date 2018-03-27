@@ -112,6 +112,17 @@ class MPDClient(BaseMPDClient):
         arg = '' if pos is None else f' {pos}'
         await self.run_command(f'play{arg}')
 
+    async def play_id(self, song_id: Optional[SongId] = None):
+        '''Begin playback. If supplied, start at the song with id `song_id`.
+
+        Args:
+            song_id: The id of the song in the playlist where to begin
+                     playback. If omitted and playback is paused, resume it.
+                     If playback was stopped, start from the beginning.
+        '''
+        arg = '' if song_id is None else f' {song_id}'
+        await self.run_command(f'playid{arg}')
+
     # Current playlist
 
     async def add(self, uri: str):

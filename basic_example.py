@@ -238,6 +238,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'move': from_and_to,
     'move_id': two_ids,
     'play': optional(one_int('takes a position.')),
+    'play_id': optional(one_id),
     'playlist_find': tag_and_needle,
     'playlist_id': optional(one_id),
     'playlist_info': optional(position_or_range),
