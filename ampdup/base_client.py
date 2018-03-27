@@ -23,7 +23,7 @@ class BaseMPDClient:
         c = cls()
         await c.connect(address, port)
         yield c
-        await c.stop()
+        await c.stop_loop()
 
     async def connect(self, address: str, port: int):
         self.connection = Connection()
@@ -43,7 +43,7 @@ class BaseMPDClient:
 
         return result
 
-    async def stop(self):
+    async def stop_loop(self):
         if self.loop:
             await self.loop.cancel()
 
