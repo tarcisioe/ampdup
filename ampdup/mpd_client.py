@@ -99,6 +99,34 @@ class MPDClient(BaseMPDClient):
         result = await self.run_command('stats')
         return from_lines(Stats, result)
 
+    # Playback options
+
+    async def consume(self, state: bool):
+        '''Enable or disable consume.
+
+        When consume is enabled, played songs are removed from the playlist.
+
+        Args:
+            state: True for consume, otherwise False.
+        '''
+        await self.run_command(f'consume {int(state)}')
+
+    async def random(self, state: bool):
+        '''Enable or disable random playback.
+
+        Args:
+            state: True for random, False for sequential.
+        '''
+        await self.run_command(f'random {int(state)}')
+
+    async def repeat(self, state: bool):
+        '''Enable or disable repeat.
+
+        Args:
+            state: True to repeat, False to play once.
+        '''
+        await self.run_command(f'repeat {int(state)}')
+
     # Playback control
 
     async def next(self):
