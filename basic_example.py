@@ -224,6 +224,18 @@ def two_ints(error: str) -> Callable[[str], List[Any]]:
     return inner
 
 
+def int_and_float(error: str) -> Callable[[str], List[Any]]:
+    def inner(argstring: str) -> List[Any]:
+        try:
+            x, y = shlex.split(argstring)
+            return [int(x), float(y)]
+        except ValueError as e:
+            raise CommandSyntaxError(
+                error
+            ) from e
+    return inner
+
+
 one_id = one_int('takes a song id.')
 two_ids = two_ints('takes two song ids.')
 
@@ -249,6 +261,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'prio': priority_and_range,
     'prio_id': priority_and_id,
     'range_id': id_and_timerange,
+    'seek': int_and_float('takes a position and a time in seconds.'),
     'shuffle': optional(range_arg),
     'swap': two_ints('takes two song positions.'),
     'swap_id': two_ids,

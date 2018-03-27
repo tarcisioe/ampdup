@@ -139,6 +139,15 @@ class MPDClient(BaseMPDClient):
         '''Play previous song in the playlist.'''
         await self.run_command(f'previous')
 
+    async def seek(self, pos: int, time: float):
+        '''Seek to a certain time of the `pos` entry in the playlist.
+
+        Args:
+            pos: The position in the playlist of the song to seek.
+            time: The timestamp to seek to in seconds (fractions allowed).
+        '''
+        await self.run_command(f'seek {pos} {time}')
+
     async def stop(self):
         '''Stop playback.'''
         await self.run_command(f'stop')
