@@ -148,6 +148,15 @@ class MPDClient(BaseMPDClient):
         '''
         await self.run_command(f'seek {pos} {time}')
 
+    async def seek_id(self, song_id: SongId, time: float):
+        '''Seek to a certain time of the song with id `song_id` in the playlist.
+
+        Args:
+            song_id: The id of the song in the playlist to seek.
+            time: The timestamp to seek to in seconds (fractions allowed).
+        '''
+        await self.run_command(f'seekid {song_id} {time}')
+
     async def stop(self):
         '''Stop playback.'''
         await self.run_command(f'stop')
