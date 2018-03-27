@@ -224,6 +224,17 @@ def two_ints(error: str) -> Callable[[str], List[Any]]:
     return inner
 
 
+def one_float(error: str) -> Callable[[str], List[Any]]:
+    def inner(argstring: str) -> List[Any]:
+        try:
+            return [float(argstring)]
+        except ValueError as e:
+            raise CommandSyntaxError(
+                error
+            ) from e
+    return inner
+
+
 def int_and_float(error: str) -> Callable[[str], List[Any]]:
     def inner(argstring: str) -> List[Any]:
         try:
@@ -263,6 +274,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'range_id': id_and_timerange,
     'seek': int_and_float('takes a position and a time in seconds.'),
     'seek_id': int_and_float('takes a song id and a time in seconds.'),
+    'seek_cur': one_float('takes a time in seconds.'),
     'shuffle': optional(range_arg),
     'swap': two_ints('takes two song positions.'),
     'swap_id': two_ids,
