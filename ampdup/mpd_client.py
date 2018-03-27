@@ -101,6 +101,10 @@ class MPDClient(BaseMPDClient):
 
     # Playback control
 
+    async def next(self):
+        '''Play next song in the playlist.'''
+        await self.run_command(f'next')
+
     async def pause(self, pause: bool):
         '''Pause or resume playback.
 
@@ -130,6 +134,14 @@ class MPDClient(BaseMPDClient):
         '''
         arg = '' if song_id is None else f' {song_id}'
         await self.run_command(f'playid{arg}')
+
+    async def previous(self):
+        '''Play previous song in the playlist.'''
+        await self.run_command(f'previous')
+
+    async def stop(self):
+        '''Stop playback.'''
+        await self.run_command(f'stop')
 
     # Current playlist
 

@@ -237,6 +237,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'current_song': no_args,
     'move': from_and_to,
     'move_id': two_ids,
+    'next': no_args,
     'pause': one_int('takes a boolean (0 or 1).'),
     'play': optional(one_int('takes a position.')),
     'play_id': optional(one_id),
@@ -244,6 +245,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'playlist_id': optional(one_id),
     'playlist_info': optional(position_or_range),
     'playlist_search': tag_and_needle,
+    'previous': no_args,
     'prio': priority_and_range,
     'prio_id': priority_and_id,
     'range_id': id_and_timerange,
@@ -252,6 +254,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'swap_id': two_ids,
     'status': no_args,
     'stats': no_args,
+    'stop': no_args,
     'update': optional(one_uri),
 }
 
