@@ -50,15 +50,6 @@ def one_uri(argstring: str) -> List[Any]:
     return args
 
 
-def one_id(argstring: str) -> List[Any]:
-    try:
-        return [int(argstring)]
-    except ValueError as e:
-        raise CommandSyntaxError(
-            'takes a song id (integer).'
-        ) from e
-
-
 def add_id_args(argstring: str) -> List[Any]:
     try:
         uri, *pos = shlex.split(argstring)
@@ -210,6 +201,17 @@ def from_and_to(argstring: str) -> List[Any]:
         ) from e
 
 
+def one_int(error: str) -> Callable[[str], List[Any]]:
+    def inner(argstring: str) -> List[Any]:
+        try:
+            return [int(argstring)]
+        except ValueError as e:
+            raise CommandSyntaxError(
+                error
+            ) from e
+    return inner
+
+
 def two_ints(error: str) -> Callable[[str], List[Any]]:
     def inner(argstring: str) -> List[Any]:
         try:
@@ -222,6 +224,10 @@ def two_ints(error: str) -> Callable[[str], List[Any]]:
     return inner
 
 
+one_id = one_int('takes a song id.')
+two_ids = two_ints('takes two song ids.')
+
+
 PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'add': one_uri,
     'add_id': add_id_args,
@@ -230,7 +236,8 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'delete_id': one_id,
     'current_song': no_args,
     'move': from_and_to,
-    'move_id': two_ints('takes two song ids.'),
+    'move_id': two_ids,
+    'play': optional(one_int('takes a position.')),
     'playlist_find': tag_and_needle,
     'playlist_id': optional(one_id),
     'playlist_info': optional(position_or_range),
@@ -240,7 +247,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'range_id': id_and_timerange,
     'shuffle': optional(range_arg),
     'swap': two_ints('takes two song positions.'),
-    'swap_id': two_ints('takes two song ids.'),
+    'swap_id': two_ids,
     'status': no_args,
     'stats': no_args,
     'update': optional(one_uri),

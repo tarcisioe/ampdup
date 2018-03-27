@@ -66,6 +66,8 @@ class MPDClient(BaseMPDClient):
 
         return await super().run_command(command)
 
+    # MPD status
+
     async def current_song(self) -> Song:
         '''Displays the song info of the current song.
 
@@ -96,6 +98,21 @@ class MPDClient(BaseMPDClient):
         '''
         result = await self.run_command('stats')
         return from_lines(Stats, result)
+
+    # Playback control
+
+    async def play(self, pos: Optional[int] = None):
+        '''Begin playback. If supplied, start at `pos` in the playlist.
+
+        Args:
+            pos: The position in the playlist where to begin playback.
+                 If omitted and playback is paused, resume it.
+                 If playback was stopped, start from the beginning.
+        '''
+        arg = '' if pos is None else f' {pos}'
+        await self.run_command(f'play{arg}')
+
+    # Current playlist
 
     async def add(self, uri: str):
         '''Add a directory or a file to the current playlist.
