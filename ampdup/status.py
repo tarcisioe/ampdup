@@ -8,9 +8,9 @@ from .song import SongId
 
 class Single(Enum):
     '''"single" setting state.'''
-    DISABLED = 0
-    ENABLED = 1
-    ONESHOT = 2
+    DISABLED = '0'
+    ENABLED = '1'
+    ONESHOT = 'oneshot'
 
 
 class State(Enum):
