@@ -288,6 +288,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'seek': int_and_float('takes a position and a time in seconds.'),
     'seek_id': int_and_float('takes a song id and a time in seconds.'),
     'seek_cur': one_float('takes a time in seconds.'),
+    'setvol': one_int('takes an amount between 0-100.'),
     'shuffle': optional(range_arg),
     'single': single_mode,
     'swap': two_ints('takes two song positions.'),
