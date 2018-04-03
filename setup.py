@@ -2,9 +2,12 @@ from sys import version_info as py_version
 from setuptools import setup, find_packages
 
 
-VERSION = '0.0.10'
+VERSION = '0.1.0'
 
 VERSION_REQUIREMENTS = []
+
+with open('README.md') as readme:
+    LONG_DESCRIPTION = readme.read()
 
 if py_version < (3, 7):
     VERSION_REQUIREMENTS += [
@@ -22,6 +25,8 @@ setup(
     maintainer='Tarcísio Eduardo Moreira Crocomo',
     maintainer_email='tarcisio.crocomo+pypi@gmail.com',
     description='A type-hinted async python mpd client library.',
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
