@@ -249,19 +249,21 @@ def int_and_float(error: str) -> Callable[[str], List[Any]]:
 
 one_id = one_int('takes a song id.')
 two_ids = two_ints('takes two song ids.')
+one_bool = one_int('takes a boolean (0 or 1).')
 
 
 PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'add': one_uri,
     'add_id': add_id_args,
     'clear': no_args,
+    'consume': one_bool,
     'delete': position_or_range,
     'delete_id': one_id,
     'current_song': no_args,
     'move': from_and_to,
     'move_id': two_ids,
     'next': no_args,
-    'pause': one_int('takes a boolean (0 or 1).'),
+    'pause': one_bool,
     'play': optional(one_int('takes a position.')),
     'play_id': optional(one_id),
     'playlist_find': tag_and_needle,
@@ -271,7 +273,9 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'previous': no_args,
     'prio': priority_and_range,
     'prio_id': priority_and_id,
+    'random': one_bool,
     'range_id': id_and_timerange,
+    'repeat': one_bool,
     'seek': int_and_float('takes a position and a time in seconds.'),
     'seek_id': int_and_float('takes a song id and a time in seconds.'),
     'seek_cur': one_float('takes a time in seconds.'),
