@@ -40,6 +40,6 @@ async def observe_state():
 Todo
 ====
 
-[ ] Support command lists.
-[ ] Support connecting through Unix socket.
-[ ] Support the more obscure MPD features such as partitions.
+- [ ] Support command lists.
+- [ ] Support connecting through Unix socket.
+- [ ] Support the more obscure MPD features such as partitions.
