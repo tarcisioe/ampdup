@@ -121,6 +121,57 @@ def tag_and_needle(argstring: str) -> List[Any]:
 ArgFunc = Callable[[str], List[Any]]
 
 
+def priority_and_range(argstring: str) -> List[Any]:
+    try:
+        first, second = argstring.split()
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes two arguments (priority and range).'
+        ) from e
+
+    try:
+        priority = int(first)
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'needs an integer as priority.'
+        ) from e
+
+    try:
+        start, end = [int(n) if n else None
+                      for n in second.split(':', maxsplit=1)]
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes a range.'
+        ) from e
+
+    return [priority, (start, end)]
+
+
+def priority_and_id(argstring: str) -> List[Any]:
+    try:
+        first, second = argstring.split()
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes two arguments (priority and song id).'
+        ) from e
+
+    try:
+        priority = int(first)
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'needs an integer as priority.'
+        ) from e
+
+    try:
+        song_id = SongId(second)
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'needs an integer as song id.'
+        ) from e
+
+    return [priority, song_id]
+
+
 @decorator
 def optional_dec(wrapped: ArgFunc,
                  _: Any,
@@ -184,6 +235,8 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'playlist_id': optional(one_id),
     'playlist_info': optional(position_or_range),
     'playlist_search': tag_and_needle,
+    'prio': priority_and_range,
+    'prio_id': priority_and_id,
     'range_id': id_and_timerange,
     'shuffle': optional(range_arg),
     'swap': two_ints('takes two song positions.'),

@@ -17,7 +17,7 @@ def test_song_from_lines():
         'duration: 42.0',
         'Pos: 7',
         'Id: 123',
-
+        'prio: 30'
     ]
 
     song = Song(
@@ -33,6 +33,7 @@ def test_song_from_lines():
         duration=42.0,
         pos=7,
         id=123,
+        prio=30,
     )
 
     assert from_lines(Song, lines) == song
