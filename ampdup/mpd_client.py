@@ -135,6 +135,14 @@ class MPDClient(BaseMPDClient):
         '''
         await self.run_command(f'repeat {int(state)}')
 
+    async def setvol(self, amount: int):
+        '''Set volume.
+
+        Args:
+            amount: The new volume, from 0 to 100.
+        '''
+        await self.run_command(f'setvol {amount}')
+
     # Playback control
 
     async def next(self):
