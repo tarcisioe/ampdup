@@ -7,7 +7,7 @@ from .errors import ClientTypeError, NoCurrentSongError
 from .song import Song, SongId, TimeRange
 from .parsing import from_lines, parse_playlist, parse_single
 from .stats import Stats
-from .status import Status
+from .status import Single, Status
 from .util import has_any_prefix
 
 
@@ -110,6 +110,14 @@ class MPDClient(BaseMPDClient):
             state: True for consume, otherwise False.
         '''
         await self.run_command(f'consume {int(state)}')
+
+    async def single(self, mode: Single):
+        '''Enable, disable or set to oneshot single playback.
+
+        Args:
+            mode: True for random, False for sequential.
+        '''
+        await self.run_command(f'single {mode.value}')
 
     async def random(self, state: bool):
         '''Enable or disable random playback.

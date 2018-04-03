@@ -8,7 +8,7 @@ from curio.workers import run_in_thread
 from wrapt import decorator
 
 from ampdup import (
-    CommandError, IdleMPDClient, MPDClient, MPDError, SongId, Tag
+    CommandError, IdleMPDClient, MPDClient, MPDError, Single, SongId, Tag
 )
 
 
@@ -235,6 +235,15 @@ def one_float(error: str) -> Callable[[str], List[Any]]:
     return inner
 
 
+def single_mode(argstring: str) -> List[Any]:
+    try:
+        return [Single(argstring)]
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes either 0, 1 or oneshot.'
+        ) from e
+
+
 def int_and_float(error: str) -> Callable[[str], List[Any]]:
     def inner(argstring: str) -> List[Any]:
         try:
@@ -280,6 +289,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'seek_id': int_and_float('takes a song id and a time in seconds.'),
     'seek_cur': one_float('takes a time in seconds.'),
     'shuffle': optional(range_arg),
+    'single': single_mode,
     'swap': two_ints('takes two song positions.'),
     'swap_id': two_ids,
     'status': no_args,
