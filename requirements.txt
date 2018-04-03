@@ -7,4 +7,5 @@ pylint-quotes
 pytest
 pytest-cov
 mypy
+twine
 wrapt
