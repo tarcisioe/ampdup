@@ -3,7 +3,7 @@ from typing import List, Tuple, Union, Optional
 
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
-from .song import Song, SongId
+from .song import Song, SongId, TimeRange
 from .parsing import from_lines, parse_playlist, parse_single
 from .stats import Stats
 from .status import Status
@@ -71,10 +71,6 @@ class MPDClient(BaseMPDClient):
         result = await self.run_command('stats')
         return from_lines(Stats, result)
 
-    async def clear(self):
-        '''Clears the current playlist.'''
-        await self.run_command('clear')
-
     async def add(self, uri: str):
         '''Add a directory or a file to the current playlist.
 
@@ -98,6 +94,10 @@ class MPDClient(BaseMPDClient):
 
         result = await self.run_command(f'addid "{song_uri}"{pos}')
         return parse_single(result, SongId)
+
+    async def clear(self):
+        '''Clears the current playlist.'''
+        await self.run_command('clear')
 
     async def delete(
             self,
@@ -182,6 +182,23 @@ class MPDClient(BaseMPDClient):
 
         result = await self.run_command(f'playlistinfo{arg}')
         return parse_playlist(result)
+
+    async def range_id(
+            self,
+            song_id: SongId,
+            time_range: TimeRange = (None, None),
+    ):
+        '''Specify the portion of the song that shall be played.
+
+        Args:
+            song_id: The id of the target song.
+            time_range: A pair of offsets in seconds (fractions allowed).
+                        If omitted, removes any range,
+        '''
+        start, end = time_range
+        start_arg = '' if start is None else f'{start}'
+        end_arg = '' if end is None else f'{end}'
+        await self.run_command(f'rangeid {song_id} {start_arg}:{end_arg}')
 
     async def shuffle(self, shuffle_range: Optional[Range] = None):
         '''Shuffle the current playlist.

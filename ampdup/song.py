@@ -1,10 +1,13 @@
 '''Song metadata representation.'''
-from typing import NamedTuple
+from typing import NamedTuple, Optional, Tuple
 
 
 class SongId(int):
     '''Strong alias for song ids.'''
     pass
+
+
+TimeRange = Tuple[Optional[float], Optional[float]]
 
 
 class Song(NamedTuple):
@@ -26,3 +29,4 @@ class Song(NamedTuple):
     disc: int = None
     track: int = None
     date: int = None
+    range: TimeRange = None

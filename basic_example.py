@@ -7,7 +7,7 @@ from curio.task import spawn, TaskCancelled
 from curio.workers import run_in_thread
 from wrapt import decorator
 
-from ampdup import CommandError, IdleMPDClient, MPDClient, MPDError
+from ampdup import CommandError, IdleMPDClient, MPDClient, MPDError, SongId
 
 
 class CommandSyntaxError(MPDError):
@@ -70,6 +70,32 @@ def add_id_args(argstring: str) -> List[Any]:
         position = int(pos_arg)
         return [uri, position]
     return [uri]
+
+
+def id_and_timerange(argstring: str) -> List[Any]:
+    try:
+        first, second = argstring.split()
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes two arguments (song id and time range).'
+        ) from e
+
+    try:
+        song_id = SongId(first)
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'needs an integer as song id.'
+        ) from e
+
+    try:
+        start, end = [float(n) if n else None
+                      for n in second.split(':', maxsplit=1)]
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes a range of floats as time range.'
+        ) from e
+
+    return [song_id, (start, end)]
 
 
 ArgFunc = Callable[[str], List[Any]]
@@ -136,6 +162,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'move_id': two_ints('takes two song ids.'),
     'playlist_id': optional(one_id),
     'playlist_info': optional(position_or_range),
+    'range_id': id_and_timerange,
     'shuffle': optional(range_arg),
     'swap': two_ints('takes two song positions.'),
     'swap_id': two_ints('takes two song ids.'),
