@@ -1,7 +1,7 @@
 # pylint: skip-file
 
 from .idle_client import IdleMPDClient, Subsystem
-from .mpd_client import MPDClient
+from .mpd_client import MPDClient, Tag
 from .song import Song, SongId
 
 from .errors import *  # noqa
@@ -11,6 +11,7 @@ __all__ = [
     'MPDClient',
     'Song',
     'SongId',
+    'Tag',
     'Subsystem',
     *errors.__all__  # noqa
 ]
