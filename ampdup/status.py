@@ -38,8 +38,8 @@ class Status(NamedTuple):
     bitrate: int
     duration: float
     audio: str
-    nextsong: int
-    nextsongid: SongId
+    nextsong: int = None
+    nextsongid: SongId = None
     error: str = None
     mixrampdelay: int = None
     updating_db: int = None
