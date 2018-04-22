@@ -40,6 +40,17 @@ class Tag(Enum):
     MUSICBRAINZ_WORKID = 'musicbrainz_workid'
 
 
+class SearchType(Enum):
+    '''Special types for searching the database.'''
+    ANY = 'any'
+    FILE = 'file'
+    BASE = 'base'
+    MODIFIED_SINCE = 'modified-since'
+
+
+AnySearchType = Union[Tag, SearchType]
+
+
 def position_or_range_arg(arg: Optional[PositionOrRange]) -> str:
     '''Make argument string for commands that may take a position or a range.
 
@@ -55,6 +66,20 @@ def position_or_range_arg(arg: Optional[PositionOrRange]) -> str:
         return f' {arg}'
     start, end = arg
     return f' {start}:{end}'
+
+
+def find_args(
+        queries: List[Tuple[AnySearchType, str]]
+) -> str:
+    '''Make argument string for find and search.
+
+    Args:
+        queries: A list of queries (type and what).
+
+    Returns:
+        An argument string.
+    '''
+    return ' '.join(f'{type.value} "{what}"' for type, what in queries)
 
 
 class MPDClient(BaseMPDClient):
@@ -425,6 +450,32 @@ class MPDClient(BaseMPDClient):
             s2: the second song's id.
         '''
         await self.run_command(f'swapid {s1} {s2}')
+
+    # Music database
+
+    async def find(
+            self,
+            queries: List[Tuple[AnySearchType, str]]
+    ) -> List[Song]:
+        '''Search strictly in the music database.
+
+        Args:
+        Returns:
+        '''
+        result = await self.run_command(f'find {find_args(queries)}')
+        return parse_playlist(result)
+
+    async def search(
+            self,
+            queries: List[Tuple[AnySearchType, str]]
+    ) -> List[Song]:
+        '''Search case-insensitively in the music database.
+
+        Args:
+        Returns:
+        '''
+        result = await self.run_command(f'search {find_args(queries)}')
+        return parse_playlist(result)
 
     async def update(self, uri: str = None) -> int:
         '''Update the database.

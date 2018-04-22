@@ -16,8 +16,6 @@ class Song(NamedTuple):
     last_modified: str
     time: int
     duration: float
-    pos: int
-    id: SongId
     artist: str = ''
     artistsort: str = ''
     albumartist: str = ''
@@ -30,4 +28,6 @@ class Song(NamedTuple):
     track: int = None
     date: int = None
     range: TimeRange = None
+    pos: int = None
+    id: SongId = None
     prio: int = None
