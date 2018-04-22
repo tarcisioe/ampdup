@@ -3,6 +3,7 @@
 from .idle_client import IdleMPDClient, Subsystem
 from .mpd_client import MPDClient, Tag, Single
 from .song import Song, SongId
+from .status import State, Status
 
 from .errors import *  # noqa
 
@@ -12,7 +13,9 @@ __all__ = [
     'Single',
     'Song',
     'SongId',
-    'Tag',
+    'State',
+    'Status',
     'Subsystem',
+    'Tag',
     *errors.__all__  # noqa
 ]
