@@ -1,6 +1,6 @@
 import shlex
 
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 from curio import run
 from curio.task import spawn, TaskCancelled
@@ -8,7 +8,8 @@ from curio.workers import run_in_thread
 from wrapt import decorator
 
 from ampdup import (
-    CommandError, IdleMPDClient, MPDClient, MPDError, Single, SongId, Tag
+    CommandError, IdleMPDClient, MPDClient, MPDError, SearchType, Single,
+    SongId, Tag
 )
 
 
@@ -163,6 +164,27 @@ def priority_and_id(argstring: str) -> List[Any]:
     return [priority, song_id]
 
 
+def type_what(argstring: str) -> List[Any]:
+    try:
+        search_type_str, what = shlex.split(argstring)
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes two arguments (type and what).'
+        ) from e
+
+    search_type: Union[Tag, SearchType]
+
+    try:
+        search_type = Tag(search_type_str)
+    except ValueError:
+        try:
+            search_type = SearchType(search_type_str)
+        except ValueError as f:
+            raise CommandSyntaxError('No such search type.') from f
+
+    return [[(search_type, what)]]
+
+
 @decorator
 def optional_dec(wrapped: ArgFunc,
                  _: Any,
@@ -266,9 +288,10 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'add_id': add_id_args,
     'clear': no_args,
     'consume': one_bool,
+    'current_song': no_args,
     'delete': position_or_range,
     'delete_id': one_id,
-    'current_song': no_args,
+    'find': type_what,
     'move': from_and_to,
     'move_id': two_ids,
     'next': no_args,
@@ -285,6 +308,7 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'random': one_bool,
     'range_id': id_and_timerange,
     'repeat': one_bool,
+    'search': type_what,
     'seek': int_and_float('takes a position and a time in seconds.'),
     'seek_id': int_and_float('takes a song id and a time in seconds.'),
     'seek_cur': one_float('takes a time in seconds.'),
