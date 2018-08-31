@@ -31,13 +31,13 @@ class Status(NamedTuple):
     playlistlength: int
     mixrampdb: float
     state: State
-    song: int
-    songid: SongId
-    time: str
-    elapsed: float
-    bitrate: int
-    duration: float
-    audio: str
+    song: int = None
+    songid: SongId = None
+    time: str = None
+    elapsed: float = None
+    bitrate: int = None
+    duration: float = None
+    audio: str = None
     nextsong: int = None
     nextsongid: SongId = None
     error: str = None
