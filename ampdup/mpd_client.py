@@ -487,7 +487,9 @@ class MPDClient(BaseMPDClient):
         Returns:
             The id of the update job.
         '''
-        result = await self.run_command(f'update "{uri}"')
+        arg = f' "{uri}"' if uri else ''
+
+        result = await self.run_command(f'update{arg}')
         return parse_single(result, int)
 
     async def rescan(self, uri: str = None) -> int:
@@ -500,5 +502,7 @@ class MPDClient(BaseMPDClient):
         Returns:
             The id of the update job.
         '''
-        result = await self.run_command(f'rescan "{uri}"')
+        arg = f' "{uri}"' if uri else ''
+
+        result = await self.run_command(f'rescan{arg}')
         return parse_single(result, int)

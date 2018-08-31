@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ampdup"
-version = "0.2.2"
+version = "0.2.3"
 description = "A type-hinted async python mpd client library."
 authors = ["Tarcisio Eduardo Moreira Crocomo <tarcisio.crocomo+pypi@gmail.com>"]
 license = "MIT"
