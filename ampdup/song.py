@@ -24,6 +24,8 @@ class Song(NamedTuple):
     album: str = ''
     albumsort: str = ''
     genre: str = ''
+    label: str = ''
+    format: str = None
     disc: int = None
     track: int = None
     date: int = None
