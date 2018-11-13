@@ -22,7 +22,6 @@ class State(Enum):
 
 class Status(NamedTuple):
     '''Type representing the static data about a playable song in MPD.'''
-    volume: int
     repeat: bool
     random: bool
     single: Single
@@ -31,6 +30,7 @@ class Status(NamedTuple):
     playlistlength: int
     mixrampdb: float
     state: State
+    volume: int = None
     song: int = None
     songid: SongId = None
     time: str = None
