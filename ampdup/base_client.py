@@ -1,21 +1,25 @@
-from typing import AsyncGenerator, List
+from typing import AsyncGenerator, List, Optional, Union
 
 from dataclasses import dataclass, field
 
-from curio.promise import Promise
-from curio.queue import Queue
-from curio.task import spawn, Task, TaskCancelled
+from asyncio import Future, AbstractEventLoop  # pylint: disable=unused-import
+from asyncio import Queue
+from asyncio import get_event_loop, Task, CancelledError
 
-from .connection import Connection
+from .connection import Connection, NotConnectedError
+from .errors import CommandError
 from .parsing import parse_error
 from .util import asynccontextmanager
 
 
 @dataclass
 class BaseMPDClient:
-    pending_commands: Queue = field(default_factory=Queue)
-    connection: Connection = None
-    loop: Task = None
+    pending_commands: 'Queue[Future[List[str]]]' = field(default_factory=Queue)
+    connection: Optional[Connection] = None
+    loop: Optional[Task] = None
+    event_loop: AbstractEventLoop = field(
+        default_factory=get_event_loop
+    )
 
     @classmethod
     @asynccontextmanager
@@ -31,12 +35,15 @@ class BaseMPDClient:
         await self._start_loop()
 
     async def run_command(self, command: str) -> List[str]:
-        p = Promise()
+        if self.connection is None:
+            raise NotConnectedError()
+
+        p: 'Future[List[str]]' = self.event_loop.create_future()
         await self.pending_commands.put(p)
 
         await self.connection.write_line(command)
 
-        result = await p.get()
+        result = await p
 
         if isinstance(result, Exception):
             raise result
@@ -45,9 +52,12 @@ class BaseMPDClient:
 
     async def stop_loop(self):
         if self.loop:
-            await self.loop.cancel()
+            self.loop.cancel()
 
-    async def _read_response(self) -> List[str]:
+    async def _read_response(self) -> Union[List[str], CommandError]:
+        if self.connection is None:
+            raise NotConnectedError()
+
         lines: List[str] = []
 
         while True:
@@ -67,9 +77,9 @@ class BaseMPDClient:
             while True:
                 reply = await self._read_response()
                 pending = await self.pending_commands.get()
-                await pending.set(reply)
-        except TaskCancelled:
+                pending.set_result(reply)
+        except CancelledError:
             return
 
     async def _start_loop(self):
-        self.loop = await spawn(self._reply_loop())
+        self.loop = self.event_loop.create_task(self._reply_loop())

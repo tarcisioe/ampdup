@@ -3,7 +3,7 @@ import re
 
 from typing import overload, Callable, Iterable, List, Tuple, TypeVar, Union
 
-from .errors import ErrorCode, get_error_constructor
+from .errors import CommandError, ErrorCode, get_error_constructor
 from .song import Song
 from .util import from_json_like, split_on
 
@@ -16,6 +16,10 @@ __all__ = [
     'parse_playlist',
     'parse_error',
 ]
+
+
+class IncompatibleErrorMessage(Exception):
+    '''Exception in case MPD sends an error in a different format somehow.'''
 
 
 def normalize(name: str) -> str:
@@ -55,7 +59,7 @@ def from_lines(cls: type, lines: Iterable[str]):
 T = TypeVar('T')
 
 
-def parse_error(error_line: str, partial: List[str]):
+def parse_error(error_line: str, partial: List[str]) -> CommandError:
     '''Parse an error from MPD.
 
     Errors are of format
@@ -68,7 +72,12 @@ def parse_error(error_line: str, partial: List[str]):
     Returns:
         A CommandError (or subclass) object with the error data.
     '''
-    code, line, command, message = ERROR_RE.match(error_line).groups()
+    match = ERROR_RE.match(error_line)
+
+    if match is None:
+        raise IncompatibleErrorMessage(error_line)
+
+    code, line, command, message = match.groups()
     error_code = ErrorCode(int(code))
     return get_error_constructor(error_code)(int(line),
                                              command,
@@ -81,7 +90,6 @@ def parse_single(
         lines: Iterable[str]  # pylint: disable=unused-argument
 ) -> str:
     '''Overload.'''
-    pass
 
 
 @overload  # noqa: F811
@@ -90,7 +98,6 @@ def parse_single(  # pylint: disable=function-redefined
         cast: Callable[[str], T]  # pylint: disable=unused-argument
 ) -> T:
     '''Overload.'''
-    pass
 
 
 def parse_single(  # noqa: F811, pylint: disable=function-redefined

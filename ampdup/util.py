@@ -1,19 +1,13 @@
 '''Utility module.'''
-import sys
-
 from enum import Enum, EnumMeta
 from functools import lru_cache
 from itertools import groupby
 from operator import itemgetter
 from typing import Any, Callable, Iterable, List, Sequence, Tuple, TypeVar
 
+from contextlib import asynccontextmanager
+
 from .song import TimeRange
-
-
-if sys.version_info < (3, 7):
-    from aiocontext import async_contextmanager as asynccontextmanager
-else:
-    from contextlib import asynccontextmanager  # noqa # pylint: disable=no-name-in-module
 
 
 __all__ = [
@@ -23,12 +17,10 @@ __all__ = [
 
 class NoCommonTypeError(Exception):
     '''Happens when values in an Enum are not of the same type.'''
-    pass
 
 
 class EmptyEnumError(Exception):
     '''Happens when an enum has no value.'''
-    pass
 
 
 @lru_cache()

@@ -7,8 +7,7 @@ A type-hinted async python mpd client library.
 Summary
 =======
 
-`ampdup` is an async/await based MPD library. It currently uses `curio` as its
-means of establishing connections.
+`ampdup` is an async/await based MPD library.
 
 It is fully type-hinted and MPD responses are typed as well, so it is able to
 play nicely with `mypy` and autocompletion such as what is provided by `jedi`.
