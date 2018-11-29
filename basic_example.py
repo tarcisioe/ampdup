@@ -2,9 +2,9 @@ import shlex
 
 from typing import Any, Callable, Dict, List, Tuple, Union
 
-from curio import run
-from curio.task import spawn, TaskCancelled
-from curio.workers import run_in_thread
+from asyncio import run
+from asyncio import create_task, CancelledError
+from asyncio import get_event_loop
 from wrapt import decorator
 
 from ampdup import (
@@ -333,10 +333,11 @@ def parse_args(command: str, argstring: str = '') -> List[Any]:
     return parser(argstring)
 
 
-async def commands(client: MPDClient):
+async def commands(client: MPDClient, loop=None):
+    loop = loop if loop is not None else get_event_loop()
     while True:
         try:
-            command: str = await run_in_thread(input, '>>> ')
+            command: str = await loop.run_in_executor(None, lambda: input('>>> '))
         except EOFError:
             print()
             break
@@ -349,6 +350,7 @@ async def commands(client: MPDClient):
                 args = parse_args(method, *argstring)
                 result = await m(*args)
             else:
+                pass
                 result = await client.run_command(command.strip('!'))
         except CommandError as e:
             exc_name = type(e).__name__
@@ -362,7 +364,7 @@ async def commands(client: MPDClient):
             if isinstance(result, List):
                 for line in result:
                     print(line)
-            else:
+            elif result is not None:
                 print(result)
 
 
@@ -372,15 +374,16 @@ async def monitor(client: IdleMPDClient):
             changes = await client.idle()
             for line in changes:
                 print(line)
-    except TaskCancelled:
+    except CancelledError:
         return
 
 
 async def main():
     async with MPDClient.make('localhost', 6600) as m, IdleMPDClient.make('localhost', 6600) as i:  # noqa
-        idle = await spawn(monitor(i))
+        loop = get_event_loop()
+        idle = loop.create_task(monitor(i))
         await commands(m)
-        await idle.cancel()
+        idle.cancel()
 
 
 if __name__ == '__main__':

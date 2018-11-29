@@ -4,7 +4,6 @@ from typing import NamedTuple, Optional, Tuple
 
 class SongId(int):
     '''Strong alias for song ids.'''
-    pass
 
 
 TimeRange = Tuple[Optional[float], Optional[float]]

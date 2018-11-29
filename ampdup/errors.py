@@ -49,7 +49,6 @@ class ClientTypeError(MPDError):
 
 class NoCurrentSongError(MPDError):
     '''Caused where there is no current song playing and one is expected.'''
-    pass
 
 
 @dataclass

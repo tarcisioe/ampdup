@@ -1,27 +1,45 @@
-from curio.io import Socket
-from curio.network import open_connection
+from asyncio import open_connection, StreamReader, StreamWriter
+from typing import Optional, NamedTuple
 
 from dataclasses import dataclass
 
 from .errors import ConnectionFailedError
-from .typing_local import AsyncBinaryIO
+
+
+class Socket(NamedTuple):
+    reader: StreamReader
+    writer: StreamWriter
+
+    async def write(self, data: bytes):
+        self.writer.write(data)
+        await self.writer.drain()
+
+    async def readline(self) -> bytes:
+        return await self.reader.readline()
+
+
+class NotConnectedError(Exception):
+    pass
 
 
 @dataclass
 class Connection:
-    connection: Socket = None
-    stream: AsyncBinaryIO = None
+    connection: Optional[Socket] = None
 
     async def connect(self, address: str, port: int):
-        self.connection = await open_connection(address, port)
-        self.stream = self.connection.as_stream()
+        self.connection = Socket(*await open_connection(address, port))
         result = await self.read_line()
         if not result.startswith('OK MPD'):
             raise ConnectionFailedError
 
     async def write_line(self, command: str):
-        await self.stream.write(command.encode() + b'\n')
+        if self.connection is not None:
+            await self.connection.write(command.encode() + b'\n')
+            return
+        raise NotConnectedError()
 
     async def read_line(self) -> str:
-        line = await self.stream.readline()
-        return line.decode().strip('\n')
+        if self.connection is not None:
+            line = await self.connection.readline()
+            return line.decode().strip('\n')
+        raise NotConnectedError()
