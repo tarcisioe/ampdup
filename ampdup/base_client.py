@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, List, Optional, Union
+from typing import AsyncGenerator, List, Optional, Union, Tuple
 
 from dataclasses import dataclass, field
 
@@ -6,8 +6,8 @@ from asyncio import Future, AbstractEventLoop  # pylint: disable=unused-import
 from asyncio import Queue
 from asyncio import get_event_loop, Task, CancelledError
 
-from .connection import Connection, NotConnectedError
-from .errors import CommandError
+from .connection import Connection
+from .errors import CommandError, ConnectionFailedError
 from .parsing import parse_error
 from .util import asynccontextmanager
 
@@ -17,6 +17,7 @@ class BaseMPDClient:
     pending_commands: 'Queue[Future[List[str]]]' = field(default_factory=Queue)
     connection: Optional[Connection] = None
     loop: Optional[Task] = None
+    details: Optional[Tuple[str, int]] = None
     event_loop: AbstractEventLoop = field(
         default_factory=get_event_loop
     )
@@ -27,16 +28,29 @@ class BaseMPDClient:
         c = cls()
         await c.connect(address, port)
         yield c
-        await c.stop_loop()
+        await c.disconnect()
 
     async def connect(self, address: str, port: int):
         self.connection = Connection()
         await self.connection.connect(address, port)
-        await self._start_loop()
+        self.details = (address, port)
+        self._start_loop()
+
+    async def disconnect(self):
+        await self._clear_connection()
+        if self.loop:
+            self.loop.cancel()
+        self.loop = None
+
+    async def reconnect(self):
+        await self.disconnect()
+        if self.details is None:
+            raise ConnectionFailedError('Not previously connected.')
+        await self.connect(*self.details)
 
     async def run_command(self, command: str) -> List[str]:
         if self.connection is None:
-            raise NotConnectedError()
+            raise ConnectionFailedError()
 
         p: 'Future[List[str]]' = self.event_loop.create_future()
         await self.pending_commands.put(p)
@@ -45,18 +59,11 @@ class BaseMPDClient:
 
         result = await p
 
-        if isinstance(result, Exception):
-            raise result
-
         return result
-
-    async def stop_loop(self):
-        if self.loop:
-            self.loop.cancel()
 
     async def _read_response(self) -> Union[List[str], CommandError]:
         if self.connection is None:
-            raise NotConnectedError()
+            raise ConnectionFailedError()
 
         lines: List[str] = []
 
@@ -72,14 +79,25 @@ class BaseMPDClient:
 
         return lines
 
+    async def _clear_connection(self):
+        if self.connection is not None:
+            await self.connection.close()
+            self.connection = None
+
     async def _reply_loop(self):
         try:
             while True:
-                reply = await self._read_response()
-                pending = await self.pending_commands.get()
-                pending.set_result(reply)
+                try:
+                    reply = await self._read_response()
+                except Exception:  # pylint: disable=broad-except
+                    await self._clear_connection()
+                    self.loop = None
+                    return
+                else:
+                    pending = await self.pending_commands.get()
+                    pending.set_result(reply)
         except CancelledError:
             return
 
-    async def _start_loop(self):
+    def _start_loop(self):
         self.loop = self.event_loop.create_task(self._reply_loop())

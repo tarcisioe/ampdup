@@ -8,8 +8,8 @@ from asyncio import get_event_loop
 from wrapt import decorator
 
 from ampdup import (
-    CommandError, IdleMPDClient, MPDClient, MPDError, SearchType, Single,
-    SongId, Tag
+    CommandError, ConnectionFailedError, IdleMPDClient, MPDClient, MPDError,
+    SearchType, Single, SongId, Tag
 )
 
 
@@ -337,7 +337,8 @@ async def commands(client: MPDClient, loop=None):
     loop = loop if loop is not None else get_event_loop()
     while True:
         try:
-            command: str = await loop.run_in_executor(None, lambda: input('>>> '))
+            command: str = await loop.run_in_executor(None,
+                                                      lambda: input('>>> '))
         except EOFError:
             print()
             break
@@ -348,7 +349,12 @@ async def commands(client: MPDClient, loop=None):
 
             if m is not None:
                 args = parse_args(method, *argstring)
-                result = await m(*args)
+                try:
+                    result = await m(*args)
+                except ConnectionFailedError:
+                    print('Connection had been lost. Retrying...')
+                    await client.reconnect()
+                    result = await m(*args)
             else:
                 pass
                 result = await client.run_command(command.strip('!'))
