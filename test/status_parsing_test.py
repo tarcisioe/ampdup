@@ -1,4 +1,4 @@
-from ampdup.status import Single, State, Status
+from ampdup import Single, State, Status
 from ampdup.parsing import from_lines
 
 

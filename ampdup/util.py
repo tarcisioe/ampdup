@@ -7,7 +7,7 @@ from typing import Any, Callable, Iterable, List, Sequence, Tuple, TypeVar
 
 from contextlib import asynccontextmanager
 
-from .song import TimeRange
+from .types import TimeRange
 
 
 __all__ = [

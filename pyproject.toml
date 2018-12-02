@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ampdup"
-version = "0.3.1"
+version = "0.4.0-dev"
 description = "A type-hinted async python mpd client library."
 authors = ["Tarcisio Eduardo Moreira Crocomo <tarcisio.crocomo+pypi@gmail.com>"]
 license = "MIT"
@@ -10,6 +10,7 @@ keywords = ["mpd", "type", "async"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
+flake8-per-file-ignores = "^0.6.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.5"

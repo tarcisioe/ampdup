@@ -1,4 +1,4 @@
-from ampdup.stats import Stats
+from ampdup import Stats
 from ampdup.parsing import from_lines
 
 
