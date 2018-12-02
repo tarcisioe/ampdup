@@ -25,14 +25,14 @@ class Song(NamedTuple):
     albumsort: str = ''
     genre: str = ''
     label: str = ''
-    format: str = None
-    disc: int = None
-    track: int = None
-    date: int = None
-    range: TimeRange = None
-    pos: int = None
-    id: SongId = None
-    prio: int = None
+    format: Optional[str] = None
+    disc: Optional[int] = None
+    track: Optional[int] = None
+    date: Optional[int] = None
+    range: Optional[TimeRange] = None
+    pos: Optional[int] = None
+    id: Optional[SongId] = None
+    prio: Optional[int] = None
 
 
 class SearchType(Enum):
@@ -67,20 +67,20 @@ class Status(NamedTuple):
     playlistlength: int
     mixrampdb: float
     state: State
-    volume: int = None
-    song: int = None
-    songid: SongId = None
-    time: str = None
-    elapsed: float = None
-    bitrate: int = None
-    duration: float = None
-    audio: str = None
-    nextsong: int = None
-    nextsongid: SongId = None
-    error: str = None
-    mixrampdelay: int = None
-    updating_db: int = None
-    xfade: int = None
+    volume: Optional[int] = None
+    song: Optional[int] = None
+    songid: Optional[SongId] = None
+    time: Optional[str] = None
+    elapsed: Optional[float] = None
+    bitrate: Optional[int] = None
+    duration: Optional[float] = None
+    audio: Optional[str] = None
+    nextsong: Optional[int] = None
+    nextsongid: Optional[SongId] = None
+    error: Optional[str] = None
+    mixrampdelay: Optional[int] = None
+    updating_db: Optional[int] = None
+    xfade: Optional[int] = None
 
 
 class Stats(NamedTuple):

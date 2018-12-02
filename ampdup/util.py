@@ -3,9 +3,13 @@ from enum import Enum, EnumMeta
 from functools import lru_cache
 from itertools import groupby
 from operator import itemgetter
-from typing import Any, Callable, Iterable, List, Sequence, Tuple, TypeVar
+from typing import (
+    Any, Callable, Iterable, List, Sequence, Tuple, Type, TypeVar
+)
 
 from contextlib import asynccontextmanager
+
+from .typing_inspect import get_args, is_optional_type
 
 from .types import TimeRange
 
@@ -24,7 +28,7 @@ class EmptyEnumError(Exception):
 
 
 @lru_cache()
-def underlying_type(enum_type: EnumMeta) -> type:
+def underlying_type(enum_type: EnumMeta) -> Type:
     '''Get the underlying type of an enum.
 
     Returns:
@@ -47,7 +51,7 @@ def underlying_type(enum_type: EnumMeta) -> type:
     return t
 
 
-def is_namedtuple(cls: type) -> bool:
+def is_namedtuple(cls: Type) -> bool:
     '''Checks if a type inherits typing.NamedTuple.
 
     Checking inspects the type and looks for the `_field_types`
@@ -62,7 +66,7 @@ def is_namedtuple(cls: type) -> bool:
     return hasattr(cls, '_field_types')
 
 
-def from_list(list_type, v):
+def from_list(list_type, v) -> List[Any]:
     '''Make a list of typed objects from a JSON-like list, based on type hints.
 
     Args:
@@ -76,7 +80,10 @@ def from_list(list_type, v):
     return [from_json_like(inner_type, value) for value in v]
 
 
-def from_dict(cls, d):
+T = TypeVar('T')
+
+
+def from_dict(cls: Type[T], d) -> T:
     '''Make an object from a dict, recursively, based on type hints.
 
     Args:
@@ -89,9 +96,9 @@ def from_dict(cls, d):
     # pylint:disable=protected-access
     if hasattr(cls, '_renames'):
         for k in d:
-            if k in cls._renames:
-                d[cls._renames[k]] = d.pop(k)
-    return cls(**{i: from_json_like(cls._field_types[i], v)
+            if k in cls._renames:  # type: ignore
+                d[cls._renames[k]] = d.pop(k)  # type: ignore
+    return cls(**{i: from_json_like(cls._field_types[i], v)  # type: ignore
                   for i, v in d.items()})
 
 
@@ -108,7 +115,7 @@ def time_range(s: str) -> TimeRange:
     return float(start), float(end)
 
 
-def from_json_like(cls, j):
+def from_json_like(cls: Type[T], j) -> T:
     '''Make an object from a JSON-like value, recursively, based on type hints.
 
     Args:
@@ -119,19 +126,26 @@ def from_json_like(cls, j):
         cls: An object of type `cls`.
     '''
     if cls is bool:
-        return cls(int(j))
+        return cls(int(j))  # type: ignore
+    if is_optional_type(cls):
+        for t in get_args(cls):
+            try:
+                return from_json_like(t, j)
+            except TypeError:
+                continue
+        raise TypeError(f'{j} cannot be converted into {cls}.')
     if any(issubclass(cls, t) for t in (int, float)):
-        return cls(j)
+        return cls(j)  # type: ignore
     if cls is str:
         return j
     if cls is TimeRange:
-        return time_range(j)
+        return time_range(j)  # type: ignore
     if is_namedtuple(cls):
         return from_dict(cls, j)
     if issubclass(cls, Enum):
-        return cls(underlying_type(cls)(j))
+        return cls(underlying_type(cls)(j))  # type: ignore
     if issubclass(cls, List):
-        return from_list(cls, j)
+        return from_list(cls, j)  # type: ignore
     raise TypeError(f'{j} cannot be converted into {cls}.')
 
 
@@ -148,7 +162,6 @@ def has_any_prefix(s: str, prefixes: Sequence[str]) -> bool:
     return any(s.startswith(prefix) for prefix in prefixes)
 
 
-T = TypeVar('T')
 Predicate = Callable[[T], bool]
 
 
