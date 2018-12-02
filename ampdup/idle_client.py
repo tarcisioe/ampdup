@@ -1,28 +1,12 @@
 '''Idle client module.'''
 
-from enum import Enum
 from typing import List
 
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError
 from .parsing import split_item
+from .types import Subsystem
 from .util import has_any_prefix
-
-
-class Subsystem(Enum):
-    '''Enumeration of available subsystems for idle to listen to.'''
-    DATABASE = 'database'
-    UPDATE = 'update'
-    STORED_PLAYLIST = 'stored_playlist'
-    PLAYLIST = 'playlist'
-    PLAYER = 'player'
-    MIXER = 'mixer'
-    OUTPUT = 'output'
-    OPTIONS = 'options'
-    PARTITION = 'partition'
-    STICKER = 'sticker'
-    SUBSCRIPTION = 'subscription'
-    MESSAGE = 'message'
 
 
 class IdleMPDClient(BaseMPDClient):

@@ -1,10 +1,12 @@
 '''MPD output parsing utilities.'''
 import re
 
-from typing import overload, Callable, Iterable, List, Tuple, TypeVar, Union
+from typing import (
+    overload, Callable, Iterable, List, Tuple, TypeVar, Type, Union
+)
 
 from .errors import CommandError, ErrorCode, get_error_constructor
-from .song import Song
+from .types import Song
 from .util import from_json_like, split_on
 
 
@@ -16,6 +18,9 @@ __all__ = [
     'parse_playlist',
     'parse_error',
 ]
+
+
+T = TypeVar('T')
 
 
 class IncompatibleErrorMessage(Exception):
@@ -49,14 +54,11 @@ def split_item(item: str) -> Tuple[str, str]:
     return lhs.strip(), rhs.strip()
 
 
-def from_lines(cls: type, lines: Iterable[str]):
+def from_lines(cls: Type[T], lines: Iterable[str]) -> T:
     '''Make a `cls` object from a list of lines in MPD output format.'''
     values = (split_item(l) for l in lines)
     normalized = {normalize(k): v for k, v in values}
     return from_json_like(cls, normalized)
-
-
-T = TypeVar('T')
 
 
 def parse_error(error_line: str, partial: List[str]) -> CommandError:
