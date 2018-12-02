@@ -4,7 +4,7 @@ import re
 from typing import overload, Callable, Iterable, List, Tuple, TypeVar, Union
 
 from .errors import CommandError, ErrorCode, get_error_constructor
-from .song import Song
+from .types import Song
 from .util import from_json_like, split_on
 
 

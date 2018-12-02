@@ -1,51 +1,17 @@
 '''MPD Client module.'''
-from enum import Enum
 from typing import List, Tuple, Union, Optional
 
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
-from .song import Song, SongId, TimeRange
 from .parsing import from_lines, parse_playlist, parse_single
-from .stats import Stats
-from .status import Single, Status
 from .util import has_any_prefix
 
+from .types import (
+    Song, SongId, Stats, Status, Single, Tag, SearchType, TimeRange
+)
 
 Range = Tuple[int, int]
 PositionOrRange = Union[int, Range]
-
-
-class Tag(Enum):
-    '''Tags supported by MPD.'''
-    ARTIST = 'artist'
-    ARTISTSORT = 'artistsort'
-    ALBUM = 'album'
-    ALBUMSORT = 'albumsort'
-    ALBUMARTIST = 'albumartist'
-    ALBUMARTISTSORT = 'albumartistsort'
-    TITLE = 'title'
-    TRACK = 'track'
-    NAME = 'name'
-    GENRE = 'genre'
-    DATE = 'date'
-    COMPOSER = 'composer'
-    PERFORMER = 'performer'
-    COMMENT = 'comment'
-    DISC = 'disc'
-    MUSICBRAINZ_ARTISTID = 'musicbrainz_artistid'
-    MUSICBRAINZ_ALBUMID = 'musicbrainz_albumid'
-    MUSICBRAINZ_ALBUMARTISTID = 'musicbrainz_albumartistid'
-    MUSICBRAINZ_TRACKID = 'musicbrainz_trackid'
-    MUSICBRAINZ_RELEASETRACKID = 'musicbrainz_releasetrackid'
-    MUSICBRAINZ_WORKID = 'musicbrainz_workid'
-
-
-class SearchType(Enum):
-    '''Special types for searching the database.'''
-    ANY = 'any'
-    FILE = 'file'
-    BASE = 'base'
-    MODIFIED_SINCE = 'modified-since'
 
 
 AnySearchType = Union[Tag, SearchType]
