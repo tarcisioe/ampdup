@@ -192,13 +192,23 @@ class MPDClient(BaseMPDClient):
         '''
         await self.run_command(f'seekid {song_id} {time}')
 
-    async def seek_cur(self, time: float):
+    async def seek_cur_abs(self, time: float):
         '''Seek to a certain time of the current song.
 
         Args:
             time: The timestamp to seek to in seconds (fractions allowed).
         '''
+        time = time if time >= 0 else 0
         await self.run_command(f'seekcur {time}')
+
+    async def seek_cur_rel(self, time: float):
+        '''Seek to a time relative to the current time in the current song.
+
+        Args:
+            time: The time delta to apply to the current time (fractions
+                  allowed).
+        '''
+        await self.run_command(f'seekcur {time:+}')
 
     async def stop(self):
         '''Stop playback.'''
