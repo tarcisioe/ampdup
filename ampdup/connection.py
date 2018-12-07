@@ -15,13 +15,12 @@ class Socket(NamedTuple):
         try:
             await self.writer.drain()
         except Exception as e:
-            print('blablabla', e)
-            raise
+            raise ConnectionFailedError() from e
 
     async def readline(self) -> bytes:
         x = await self.reader.readline()
         if not x.endswith(b'\n'):
-            raise ConnectionFailedError
+            raise ConnectionFailedError('Connection aborted while reading.')
         return x
 
     async def close(self):
@@ -34,22 +33,27 @@ class Connection:
     connection: Optional[Socket] = None
 
     async def connect(self, address: str, port: int):
-        self.connection = Socket(*await open_connection(address, port))
+        try:
+            self.connection = Socket(*await open_connection(address, port))
+        except OSError as e:
+            raise ConnectionFailedError('Could not connect to MPD') from e
+
         result = await self.read_line()
+
         if not result.startswith('OK MPD'):
-            raise ConnectionFailedError
+            raise ConnectionFailedError('Got wrong response from MPD.')
 
     async def write_line(self, command: str):
         if self.connection is not None:
             await self.connection.write(command.encode() + b'\n')
             return
-        raise ConnectionFailedError()
+        raise ConnectionFailedError('Not connected.')
 
     async def read_line(self) -> str:
         if self.connection is not None:
             line = await self.connection.readline()
             return line.decode().strip('\n')
-        raise ConnectionFailedError()
+        raise ConnectionFailedError('Not connected.')
 
     async def close(self):
         if self.connection is not None:
