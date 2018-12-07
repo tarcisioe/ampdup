@@ -44,4 +44,4 @@ class IdleMPDClient(BaseMPDClient):
 
     async def noidle(self):
         '''Cancel the current idle command.'''
-        return await self.connection.write_line('noidle')
+        return await self.connection.connection.write_line('noidle')
