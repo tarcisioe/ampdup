@@ -1,10 +1,8 @@
 import shlex
 
+from asyncio import create_task, get_running_loop, run, sleep, CancelledError
 from typing import Any, Callable, Dict, List, Tuple, Union
 
-from asyncio import run
-from asyncio import create_task, CancelledError
-from asyncio import get_event_loop
 from wrapt import decorator
 
 from ampdup import (
@@ -334,8 +332,8 @@ def parse_args(command: str, argstring: str = '') -> List[Any]:
     return parser(argstring)
 
 
-async def commands(client: MPDClient, loop=None):
-    loop = loop if loop is not None else get_event_loop()
+async def commands(client: MPDClient):
+    loop = get_running_loop()
     while True:
         try:
             command: str = await loop.run_in_executor(None,
@@ -378,16 +376,24 @@ async def commands(client: MPDClient, loop=None):
 async def monitor(client: IdleMPDClient):
     try:
         while True:
-            changes = await client.idle()
-            for line in changes:
-                print(line)
+            try:
+                changes = await client.idle()
+            except ConnectionFailedError:
+                await sleep(1)
+                try:
+                    await client.reconnect()
+                except ConnectionFailedError:
+                    continue
+            else:
+                for line in changes:
+                    print(line)
     except CancelledError:
         return
 
 
 async def main():
     async with MPDClient.make('localhost', 6600) as m, IdleMPDClient.make('localhost', 6600) as i:  # noqa
-        loop = get_event_loop()
+        loop = get_running_loop()
         idle = loop.create_task(monitor(i))
         await commands(m)
         idle.cancel()

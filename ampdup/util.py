@@ -112,7 +112,7 @@ def time_range(s: str) -> TimeRange:
         A (float, float) tuple with offsets in seconds.
     '''
     start, end = s.split('-')
-    return float(start), float(end)
+    return TimeRange((float(start), float(end)))
 
 
 def from_json_like(cls: Type[T], j) -> T:
@@ -129,23 +129,25 @@ def from_json_like(cls: Type[T], j) -> T:
         return cls(int(j))  # type: ignore
     if is_optional_type(cls):
         for t in get_args(cls):
+            if t is type(None):  # noqa
+                continue
             try:
                 return from_json_like(t, j)
             except TypeError:
                 continue
         raise TypeError(f'{j} cannot be converted into {cls}.')
-    if any(issubclass(cls, t) for t in (int, float)):
-        return cls(j)  # type: ignore
     if cls is str:
         return j
     if cls is TimeRange:
         return time_range(j)  # type: ignore
-    if is_namedtuple(cls):
-        return from_dict(cls, j)
+    if any(issubclass(cls, t) for t in (int, float)):
+        return cls(j)  # type: ignore
     if issubclass(cls, Enum):
         return cls(underlying_type(cls)(j))  # type: ignore
     if issubclass(cls, List):
         return from_list(cls, j)  # type: ignore
+    if is_namedtuple(cls):
+        return from_dict(cls, j)
     raise TypeError(f'{j} cannot be converted into {cls}.')
 
 

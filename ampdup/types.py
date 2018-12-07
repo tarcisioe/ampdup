@@ -1,9 +1,9 @@
 '''Types for MPD information.'''
 from enum import Enum
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, Optional, Tuple, NewType
 
 
-TimeRange = Tuple[Optional[float], Optional[float]]
+TimeRange = NewType('TimeRange', Tuple[Optional[float], Optional[float]])
 
 
 class SongId(int):

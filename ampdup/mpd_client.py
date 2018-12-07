@@ -384,7 +384,7 @@ class MPDClient(BaseMPDClient):
     async def range_id(
             self,
             song_id: SongId,
-            time_range: TimeRange = (None, None),
+            time_range: TimeRange = TimeRange((None, None)),
     ):
         '''Specify the portion of the song that shall be played.
 
