@@ -183,6 +183,47 @@ def type_what(argstring: str) -> List[Any]:
     return [[(search_type, what)]]
 
 
+def filter_and_sort(argstring: str) -> List[Any]:
+    try:
+        filter_expression, *remainder = shlex.split(argstring)
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes up to three arguments (filter expression, sort and descending).'
+        ) from e
+
+    if not remainder:
+        return [filter_expression]
+
+    try:
+        sort_text, *remainder = remainder
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes up to three arguments (filter expression, sort and descending).'
+        ) from e
+
+    try:
+        sort = Tag(sort_text)
+    except ValueError as f:
+        raise CommandSyntaxError(f'No such search type {sort_text}.') from f
+
+    if not remainder:
+        return [filter_expression, sort]
+
+    try:
+        descending_text, = remainder
+    except ValueError as e:
+        raise CommandSyntaxError(
+            'takes up to three arguments (filter expression, sort and descending).'
+        ) from e
+
+    try:
+        descending = bool(descending_text)
+    except ValueError as f:
+        raise CommandSyntaxError('Descending must be a boolean.') from f
+
+    return [filter_expression, sort, descending]
+
+
 @decorator
 def optional_dec(wrapped: ArgFunc,
                  _: Any,
@@ -289,7 +330,8 @@ PARSERS: Dict[str, Callable[[str], List[Any]]] = {
     'current_song': no_args,
     'delete': position_or_range,
     'delete_id': one_id,
-    'find': type_what,
+    'find': filter_and_sort,
+    'find_add': filter_and_sort,
     'move': from_and_to,
     'move_id': two_ids,
     'next': no_args,

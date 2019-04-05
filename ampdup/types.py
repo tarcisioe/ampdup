@@ -28,7 +28,7 @@ class Song(NamedTuple):
     format: Optional[str] = None
     disc: Optional[int] = None
     track: Optional[int] = None
-    date: Optional[int] = None
+    date: Optional[str] = None
     range: Optional[TimeRange] = None
     pos: Optional[int] = None
     id: Optional[SongId] = None
