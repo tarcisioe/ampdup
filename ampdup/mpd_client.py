@@ -429,17 +429,88 @@ class MPDClient(BaseMPDClient):
 
     # Music database
 
+    # async def find(
+    #         self,
+    #         queries: List[Tuple[AnySearchType, str]]
+    # ) -> List[Song]:
+    #     '''Search strictly in the music database.
+
+    #     Args:
+    #     Returns:
+    #     '''
+    #     result = await self.run_command(f'find {find_args(queries)}')
+    #     return parse_playlist(result)
+
+    async def _find_command(
+            self,
+            command: str,
+            filter_expression: str,
+            sort: Optional[Tag] = None,
+            descending: bool = False
+    ) -> List[str]:
+        descending_text = '-' if descending else ''
+
+        sort_text = (
+            f' sort {descending_text}{sort.value}'
+            if sort is not None else
+            ''
+        )
+
+        result = await self.run_command(
+            f'{command} "{filter_expression}"{sort_text}'
+        )
+
+        return result
+
     async def find(
             self,
-            queries: List[Tuple[AnySearchType, str]]
+            filter_expression: str,
+            sort: Optional[Tag] = None,
+            descending: bool = False
     ) -> List[Song]:
         '''Search strictly in the music database.
 
         Args:
+            filter_expression: an expression defining a filter for mpd.
+                               See MPD protocol version 0.21 documentation.
+            sort: a Tag by which to sort the result.
+            descending: whether to have results descending or ascending.
         Returns:
+            The songs found by the find command.
         '''
-        result = await self.run_command(f'find {find_args(queries)}')
-        return parse_playlist(result)
+
+        return parse_playlist(
+            await self._find_command(
+                'find',
+                filter_expression,
+                sort,
+                descending
+            )
+        )
+
+    async def find_add(
+            self,
+            filter_expression: str,
+            sort: Optional[Tag] = None,
+            descending: bool = False
+    ) -> List[Song]:
+        '''Directly add the results of a strict search in the music database.
+
+        Args:
+            filter_expression: an expression defining a filter for mpd.
+                               See MPD protocol version 0.21 documentation.
+            sort: a Tag by which to sort the result.
+            descending: whether to have results descending or ascending.
+        '''
+
+        return parse_playlist(
+            await self._find_command(
+                'findadd',
+                filter_expression,
+                sort,
+                descending
+            )
+        )
 
     async def search(
             self,
