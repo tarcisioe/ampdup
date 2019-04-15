@@ -434,7 +434,8 @@ async def monitor(client: IdleMPDClient):
 
 
 async def main():
-    async with MPDClient.make('localhost', 6600) as m, IdleMPDClient.make('localhost', 6600) as i:  # noqa
+    async with MPDClient.make_unix('~/.mpd/socket') as m, IdleMPDClient.make_unix('~/.mpd/socket') as i:
+    # async with MPDClient.make('localhost', 6600) as m, IdleMPDClient.make('localhost', 6600) as i:  # noqa
         loop = get_running_loop()
         idle = loop.create_task(monitor(i))
         await commands(m)

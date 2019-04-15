@@ -1,5 +1,7 @@
-from asyncio import open_connection, StreamReader, StreamWriter
-from typing import Optional, NamedTuple
+import asyncio
+from asyncio import StreamReader, StreamWriter
+from pathlib import Path
+from typing import Awaitable, Callable, Optional, NamedTuple, Tuple, Union
 
 from dataclasses import dataclass
 
@@ -25,16 +27,41 @@ class Socket(NamedTuple):
 
     async def close(self):
         self.writer.close()
-        await self.writer.wait_closed()
+        try:
+            await self.writer.wait_closed()
+        except BrokenPipeError:
+            pass
+
+
+@dataclass
+class TCPConnector:
+    address: str
+    port: int
+
+    async def connect(self) -> Socket:
+        return Socket(*await asyncio.open_connection(self.address, self.port))
+
+
+@dataclass
+class UnixConnector:
+    path: Path
+
+    async def connect(self) -> Socket:
+        path = str(self.path.expanduser().absolute())
+        return Socket(*await asyncio.open_unix_connection(path))
+
+
+Connector = Union[TCPConnector, UnixConnector]
 
 
 @dataclass
 class Connection:
+    connector: Connector
     connection: Optional[Socket] = None
 
-    async def connect(self, address: str, port: int):
+    async def connect(self):
         try:
-            self.connection = Socket(*await open_connection(address, port))
+            self.connection = await self.connector.connect()
         except OSError as e:
             raise ConnectionFailedError('Could not connect to MPD') from e
 

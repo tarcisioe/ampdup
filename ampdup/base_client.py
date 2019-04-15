@@ -1,4 +1,7 @@
-from typing import AsyncGenerator, List, Optional, Union, Tuple
+from pathlib import Path
+from typing import (
+    AsyncGenerator, Awaitable, Callable, List, Optional, Union, Tuple
+)
 
 from dataclasses import dataclass, field
 
@@ -6,7 +9,7 @@ from asyncio import (  # pylint:disable=unused-import
     create_task, get_running_loop, CancelledError, Future, Queue, Task
 )
 
-from .connection import Connection
+from .connection import Connection, Connector, UnixConnector, TCPConnector
 from .errors import CommandError, ConnectionFailedError
 from .parsing import parse_error
 from .util import asynccontextmanager
@@ -18,12 +21,11 @@ class MPDConnection:
     connection: Optional[Connection] = None
     loop: Optional[Task] = None
 
-    async def connect(self, address: str, port: int):
-        self.connection = Connection()
-        await self.connection.connect(address, port)
+    async def _connect(self):
+        await self.connection.connect()
         self._start_loop()
 
-    async def disconnect(self):
+    async def _disconnect(self):
         if self.connection is not None:
             await self.connection.close()
 
@@ -31,7 +33,18 @@ class MPDConnection:
             self.loop.cancel()
 
         self.loop = None
+
+    async def connect(self, connector: Connector):
+        self.connection = Connection(connector)
+        await self._connect()
+
+    async def disconnect(self):
+        await self._disconnect()
         self.connection = None
+
+    async def reconnect(self):
+        await self._disconnect()
+        await self._connect()
 
     async def run_command(self, command: str) -> List[str]:
         if self.connection is None:
@@ -88,7 +101,6 @@ class MPDConnection:
 @dataclass
 class BaseMPDClient:
     connection: Optional[MPDConnection] = None
-    details: Optional[Tuple[str, int]] = None
 
     @classmethod
     @asynccontextmanager
@@ -98,24 +110,35 @@ class BaseMPDClient:
         yield c
         await c.disconnect()
 
+    @classmethod
+    @asynccontextmanager
+    async def make_unix(cls, socket: Path) -> AsyncGenerator:
+        c = cls()
+        await c.connect_unix(socket)
+        yield c
+        await c.disconnect()
+
     async def connect(self, address: str, port: int):
         self.connection = MPDConnection()
 
-        await self.connection.connect(address, port)
-        self.details = (address, port)
+        await self.connection.connect(TCPConnector(address, port))
+
+    async def connect_unix(self, path: Path):
+        self.connection = MPDConnection()
+
+        await self.connection.connect(UnixConnector(Path(path)))
 
     async def disconnect(self):
         if self.connection is not None:
             await self.connection.disconnect()
 
     async def reconnect(self):
-        if self.connection is None or self.details is None:
+        if self.connection is None:
             raise ConnectionFailedError(
                 'Cannot reconnect if not previously connected.'
             )
 
-        await self.disconnect()
-        await self.connect(*self.details)
+        await self.connection.reconnect()
 
     async def run_command(self, command: str) -> List[str]:
         if self.connection is None:
