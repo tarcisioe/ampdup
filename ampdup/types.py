@@ -13,7 +13,6 @@ class SongId(int):
 class Song(NamedTuple):
     '''Type representing the static data about a playable song in MPD.'''
     file: str
-    last_modified: str
     time: int
     duration: float
     artist: str = ''
@@ -25,6 +24,7 @@ class Song(NamedTuple):
     albumsort: str = ''
     genre: str = ''
     label: str = ''
+    last_modified: Optional[str] = None
     format: Optional[str] = None
     disc: Optional[int] = None
     track: Optional[int] = None
