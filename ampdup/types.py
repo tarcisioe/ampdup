@@ -108,6 +108,8 @@ class Subsystem(Enum):
     STICKER = 'sticker'
     SUBSCRIPTION = 'subscription'
     MESSAGE = 'message'
+    NEIGHBOR = 'neighbor'
+    MOUNT = 'mount'
 
 
 class Tag(Enum):
