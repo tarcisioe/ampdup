@@ -81,6 +81,7 @@ class Status(NamedTuple):
     mixrampdelay: Optional[int] = None
     updating_db: Optional[int] = None
     xfade: Optional[int] = None
+    partition: Optional[str] = None
 
 
 class Stats(NamedTuple):

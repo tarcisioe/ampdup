@@ -27,7 +27,7 @@ def test_song_from_lines():
         title='Sounds From the Depths of Testing',
         album='Journey Through Testing',
         track=3,
-        date=4,
+        date='4',
         genre='Test Rock',
         time=42,
         duration=42.0,
