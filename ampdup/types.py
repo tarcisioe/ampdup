@@ -33,6 +33,7 @@ class Song(NamedTuple):
     pos: Optional[int] = None
     id: Optional[SongId] = None
     prio: Optional[int] = None
+    grouping: Optional[str] = None
 
 
 class SearchType(Enum):
