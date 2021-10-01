@@ -1,14 +1,10 @@
 '''MPD output parsing utilities.'''
 import re
-
-from typing import (
-    overload, Callable, Iterable, List, Tuple, TypeVar, Type, Union
-)
+from typing import Callable, Iterable, List, Tuple, Type, TypeVar, Union, overload
 
 from .errors import CommandError, ErrorCode, get_error_constructor
 from .types import Song
 from .util import from_json_like, split_on
-
 
 __all__ = [
     'normalize',
@@ -81,30 +77,24 @@ def parse_error(error_line: str, partial: List[str]) -> CommandError:
 
     code, line, command, message = match.groups()
     error_code = ErrorCode(int(code))
-    return get_error_constructor(error_code)(int(line),
-                                             command,
-                                             message,
-                                             partial)
+    return get_error_constructor(error_code)(int(line), command, message, partial)
 
 
 @overload
-def parse_single(
-        lines: Iterable[str]  # pylint: disable=unused-argument
-) -> str:
+def parse_single(lines: Iterable[str]) -> str:  # pylint: disable=unused-argument
     '''Overload.'''
 
 
 @overload  # noqa: F811
 def parse_single(  # pylint: disable=function-redefined
-        lines: Iterable[str],  # pylint: disable=unused-argument
-        cast: Callable[[str], T]  # pylint: disable=unused-argument
+    lines: Iterable[str],  # pylint: disable=unused-argument
+    cast: Callable[[str], T],  # pylint: disable=unused-argument
 ) -> T:
     '''Overload.'''
 
 
 def parse_single(  # noqa: F811, pylint: disable=function-redefined
-        lines: Iterable[str],
-        cast: Callable[[str], T] = None
+    lines: Iterable[str], cast: Callable[[str], T] = None
 ) -> Union[str, T]:
     '''Parse a single return value and discard its name.
 
@@ -115,7 +105,7 @@ def parse_single(  # noqa: F811, pylint: disable=function-redefined
     Returns:
         The value as a string or converted into the chosen type.
     '''
-    result, = lines
+    (result,) = lines
     _, value = split_item(result)
     if cast is None:
         return value

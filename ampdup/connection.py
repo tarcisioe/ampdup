@@ -1,9 +1,8 @@
 import asyncio
 from asyncio import StreamReader, StreamWriter
-from pathlib import Path
-from typing import Awaitable, Callable, Optional, NamedTuple, Tuple, Union
-
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Awaitable, Callable, NamedTuple, Optional, Tuple, Union
 
 from .errors import ConnectionFailedError
 

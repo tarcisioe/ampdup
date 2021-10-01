@@ -1,18 +1,13 @@
 '''Utility module.'''
+from contextlib import asynccontextmanager
 from enum import Enum, EnumMeta
 from functools import lru_cache
 from itertools import groupby
 from operator import itemgetter
-from typing import (
-    Any, Callable, Iterable, List, Sequence, Tuple, Type, TypeVar
-)
-
-from contextlib import asynccontextmanager
-
-from .typing_inspect import get_args, is_optional_type
+from typing import Any, Callable, Iterable, List, Sequence, Tuple, Type, TypeVar
 
 from .types import TimeRange
-
+from .typing_inspect import get_args, is_optional_type
 
 __all__ = [
     'asynccontextmanager',
@@ -76,7 +71,7 @@ def from_list(list_type, v) -> List[Any]:
     Returns:
         list_type: An object of type `list_type`.
     '''
-    inner_type, = list_type.__args__
+    (inner_type,) = list_type.__args__
     return [from_json_like(inner_type, value) for value in v]
 
 
@@ -98,8 +93,12 @@ def from_dict(cls: Type[T], d) -> T:
         for k in d:
             if k in cls._renames:  # type: ignore
                 d[cls._renames[k]] = d.pop(k)  # type: ignore
-    return cls(**{i: from_json_like(cls.__annotations__[i], v)  # type: ignore
-                  for i, v in d.items()})
+    return cls(
+        **{
+            i: from_json_like(cls.__annotations__[i], v)  # type: ignore
+            for i, v in d.items()
+        }
+    )
 
 
 def time_range(s: str) -> TimeRange:
@@ -167,9 +166,9 @@ def has_any_prefix(s: str, prefixes: Sequence[str]) -> bool:
 Predicate = Callable[[T], bool]
 
 
-def enumerate_on(pred: Predicate,
-                 iterable: Iterable[T],
-                 begin: int = 0) -> Iterable[Tuple[int, T]]:
+def enumerate_on(
+    pred: Predicate, iterable: Iterable[T], begin: int = 0
+) -> Iterable[Tuple[int, T]]:
     '''Generate enumerated tuples based on sentinel elements in an iterable.
 
     A sentinel element is one for which `pred` is `True`. From it onwards the
@@ -200,8 +199,7 @@ def enumerate_on(pred: Predicate,
         yield i, e
 
 
-def split_on(pred: Predicate,
-             iterable: Iterable[T]) -> Iterable[Iterable[T]]:
+def split_on(pred: Predicate, iterable: Iterable[T]) -> Iterable[Iterable[T]]:
     '''Split an iterable based on sentnel elements.
 
     A sentinel element is one for which `pred` is `True`. From it onwards a
@@ -215,9 +213,9 @@ def split_on(pred: Predicate,
         An iterable with an iterable for each split.
     '''
 
-    enumerated = enumerate_on(pred,
-                              iterable)
+    enumerated = enumerate_on(pred, iterable)
 
-    return ((line for _, line in group)
-            for _, group in groupby(enumerated,
-                                    key=itemgetter(0)))
+    return (
+        (line for _, line in group)
+        for _, group in groupby(enumerated, key=itemgetter(0))
+    )

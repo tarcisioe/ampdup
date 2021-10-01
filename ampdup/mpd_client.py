@@ -1,14 +1,11 @@
 '''MPD Client module.'''
-from typing import List, Tuple, Union, Optional
+from typing import List, Optional, Tuple, Union
 
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError, NoCurrentSongError
 from .parsing import from_lines, parse_playlist, parse_single
+from .types import SearchType, Single, Song, SongId, Stats, Status, Tag, TimeRange
 from .util import has_any_prefix
-
-from .types import (
-    Song, SongId, Stats, Status, Single, Tag, SearchType, TimeRange
-)
 
 Range = Tuple[int, int]
 PositionOrRange = Union[int, Range]
@@ -34,9 +31,7 @@ def position_or_range_arg(arg: Optional[PositionOrRange]) -> str:
     return f' {start}:{end}'
 
 
-def find_args(
-        queries: List[Tuple[AnySearchType, str]]
-) -> str:
+def find_args(queries: List[Tuple[AnySearchType, str]]) -> str:
     '''Make argument string for find and search.
 
     Args:
@@ -245,8 +240,8 @@ class MPDClient(BaseMPDClient):
         await self.run_command('clear')
 
     async def delete(
-            self,
-            position_or_range: PositionOrRange,
+        self,
+        position_or_range: PositionOrRange,
     ):
         '''Delete songs from the playlist.
 
@@ -300,15 +295,10 @@ class MPDClient(BaseMPDClient):
 
         Returns:
         '''
-        result = await self.run_command(
-            f'playlistfind {tag.value} "{needle}"'
-        )
+        result = await self.run_command(f'playlistfind {tag.value} "{needle}"')
         return parse_playlist(result)
 
-    async def playlist_id(
-            self,
-            song_id: Optional[SongId] = None
-    ) -> List[Song]:
+    async def playlist_id(self, song_id: Optional[SongId] = None) -> List[Song]:
         '''Get information about a particular song in the playlist.
 
         Args:
@@ -324,8 +314,8 @@ class MPDClient(BaseMPDClient):
         return parse_playlist(result)
 
     async def playlist_info(
-            self,
-            position_or_range: Optional[PositionOrRange] = None,
+        self,
+        position_or_range: Optional[PositionOrRange] = None,
     ) -> List[Song]:
         '''Get information about every song in the current playlist.
 
@@ -351,9 +341,7 @@ class MPDClient(BaseMPDClient):
 
         Returns:
         '''
-        result = await self.run_command(
-            f'playlistsearch {tag.value} "{needle}"'
-        )
+        result = await self.run_command(f'playlistsearch {tag.value} "{needle}"')
         return parse_playlist(result)
 
     async def prio(self, priority: int, song_range: Range):
@@ -366,9 +354,7 @@ class MPDClient(BaseMPDClient):
         start, end = song_range
         start_arg = '' if start is None else f'{start}'
         end_arg = '' if end is None else f'{end}'
-        result = await self.run_command(
-            f'prio {priority} {start_arg}:{end_arg}'
-        )
+        result = await self.run_command(f'prio {priority} {start_arg}:{end_arg}')
         return parse_playlist(result)
 
     async def prio_id(self, priority: int, song_id: SongId):
@@ -382,9 +368,9 @@ class MPDClient(BaseMPDClient):
         return parse_playlist(result)
 
     async def range_id(
-            self,
-            song_id: SongId,
-            time_range: TimeRange = TimeRange((None, None)),
+        self,
+        song_id: SongId,
+        time_range: TimeRange = TimeRange((None, None)),
     ):
         '''Specify the portion of the song that shall be played.
 
@@ -442,31 +428,25 @@ class MPDClient(BaseMPDClient):
     #     return parse_playlist(result)
 
     async def _find_command(
-            self,
-            command: str,
-            filter_expression: str,
-            sort: Optional[Tag] = None,
-            descending: bool = False
+        self,
+        command: str,
+        filter_expression: str,
+        sort: Optional[Tag] = None,
+        descending: bool = False,
     ) -> List[str]:
         descending_text = '-' if descending else ''
 
-        sort_text = (
-            f' sort {descending_text}{sort.value}'
-            if sort is not None else
-            ''
-        )
+        sort_text = f' sort {descending_text}{sort.value}' if sort is not None else ''
 
-        result = await self.run_command(
-            f'{command} "{filter_expression}"{sort_text}'
-        )
+        result = await self.run_command(f'{command} "{filter_expression}"{sort_text}')
 
         return result
 
     async def find(
-            self,
-            filter_expression: str,
-            sort: Optional[Tag] = None,
-            descending: bool = False
+        self,
+        filter_expression: str,
+        sort: Optional[Tag] = None,
+        descending: bool = False,
     ) -> List[Song]:
         '''Search strictly in the music database.
 
@@ -480,19 +460,14 @@ class MPDClient(BaseMPDClient):
         '''
 
         return parse_playlist(
-            await self._find_command(
-                'find',
-                filter_expression,
-                sort,
-                descending
-            )
+            await self._find_command('find', filter_expression, sort, descending)
         )
 
     async def find_add(
-            self,
-            filter_expression: str,
-            sort: Optional[Tag] = None,
-            descending: bool = False
+        self,
+        filter_expression: str,
+        sort: Optional[Tag] = None,
+        descending: bool = False,
     ) -> List[Song]:
         '''Directly add the results of a strict search in the music database.
 
@@ -504,18 +479,10 @@ class MPDClient(BaseMPDClient):
         '''
 
         return parse_playlist(
-            await self._find_command(
-                'findadd',
-                filter_expression,
-                sort,
-                descending
-            )
+            await self._find_command('findadd', filter_expression, sort, descending)
         )
 
-    async def search(
-            self,
-            queries: List[Tuple[AnySearchType, str]]
-    ) -> List[Song]:
+    async def search(self, queries: List[Tuple[AnySearchType, str]]) -> List[Song]:
         '''Search case-insensitively in the music database.
 
         Args:

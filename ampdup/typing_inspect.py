@@ -33,22 +33,25 @@ Python 3.7+.
 # SOFTWARE.
 
 
-from typing import Callable
-
 from typing import (  # type: ignore
-    ClassVar, Generic, Tuple, Type, Union, _GenericAlias
+    Callable,
+    ClassVar,
+    Generic,
+    Tuple,
+    Type,
+    Union,
+    _GenericAlias,
 )
 
 
 def is_union_type(tp: Type) -> bool:
     '''Test if the type is a union type. Examples::
-        is_union_type(int) == False
-        is_union_type(Union) == True
-        is_union_type(Union[int, int]) == False
-        is_union_type(Union[T, int]) == True
+    is_union_type(int) == False
+    is_union_type(Union) == True
+    is_union_type(Union[int, int]) == False
+    is_union_type(Union[T, int]) == True
     '''
-    return (tp is Union or
-            isinstance(tp, _GenericAlias) and tp.__origin__ is Union)
+    return tp is Union or isinstance(tp, _GenericAlias) and tp.__origin__ is Union
 
 
 def get_origin(tp):

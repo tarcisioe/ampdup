@@ -1,15 +1,16 @@
-from pathlib import Path
-from typing import (
-    AsyncGenerator, Awaitable, Callable, List, Optional, Union, Tuple
-)
-
-from dataclasses import dataclass, field
-
 from asyncio import (  # pylint:disable=unused-import
-    create_task, get_running_loop, CancelledError, Future, Queue, Task
+    CancelledError,
+    Future,
+    Queue,
+    Task,
+    create_task,
+    get_running_loop,
 )
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import AsyncGenerator, Awaitable, Callable, List, Optional, Tuple, Union
 
-from .connection import Connection, Connector, UnixConnector, TCPConnector
+from .connection import Connection, Connector, TCPConnector, UnixConnector
 from .errors import CommandError, ConnectionFailedError
 from .parsing import parse_error
 from .util import asynccontextmanager
@@ -134,16 +135,12 @@ class BaseMPDClient:
 
     async def reconnect(self):
         if self.connection is None:
-            raise ConnectionFailedError(
-                'Cannot reconnect if not previously connected.'
-            )
+            raise ConnectionFailedError('Cannot reconnect if not previously connected.')
 
         await self.connection.reconnect()
 
     async def run_command(self, command: str) -> List[str]:
         if self.connection is None:
-            raise ConnectionFailedError(
-                'Connection is not established.'
-            )
+            raise ConnectionFailedError('Connection is not established.')
 
         return await self.connection.run_command(command)

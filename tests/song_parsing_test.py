@@ -17,7 +17,7 @@ def test_song_from_lines():
         'duration: 42.0',
         'Pos: 7',
         'Id: 123',
-        'prio: 30'
+        'prio: 30',
     ]
 
     song = Song(

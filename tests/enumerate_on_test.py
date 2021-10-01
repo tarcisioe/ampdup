@@ -24,7 +24,7 @@ def test_enumerate_on_even_numbers():
         (3, 7),
         (3, 9),
         (3, 11),
-        (4, 12)
+        (4, 12),
     ]
 
     assert list(enumerated) == expected

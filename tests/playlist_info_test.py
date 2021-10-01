@@ -67,7 +67,7 @@ def test_song_from_lines():
             genre='Steampunk',
             disc=None,
             track=4,
-            date='2012'
+            date='2012',
         ),
         Song(
             file='Abney Park/The Death Of Tragedy/Downtrodden.mp3',
@@ -83,7 +83,7 @@ def test_song_from_lines():
             genre='Steampunk',
             disc=None,
             track=9,
-            date='2005'
+            date='2005',
         ),
         Song(
             file='GLaDOS/Portal/Still Alive.mp3',
@@ -99,7 +99,7 @@ def test_song_from_lines():
             genre='Soundtrack',
             disc=None,
             track=1,
-            date='2007'
+            date='2007',
         ),
         Song(
             file='An Endless Sporadic/Sun of Pearl.mp3',
@@ -115,7 +115,7 @@ def test_song_from_lines():
             genre='Progressive Rock',
             disc=None,
             track=None,
-            date=None
+            date=None,
         ),
     ]
 

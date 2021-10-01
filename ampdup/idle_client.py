@@ -14,6 +14,7 @@ class IdleMPDClient(BaseMPDClient):
 
     More information in the idle() method docstring.
     '''
+
     async def run_command(self, command: str):
         if not has_any_prefix(command, ('idle', 'noidle')):
             raise ClientTypeError(
@@ -22,8 +23,7 @@ class IdleMPDClient(BaseMPDClient):
 
         return await super().run_command(command)
 
-    async def idle(self,
-                   *subsystems: Subsystem) -> List[Subsystem]:
+    async def idle(self, *subsystems: Subsystem) -> List[Subsystem]:
         '''Run the idle command, fetching events from the player.
 
         Args:

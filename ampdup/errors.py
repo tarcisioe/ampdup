@@ -1,9 +1,7 @@
 '''Classes for raising when errors happen.'''
+from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Dict, List
-
-from dataclasses import dataclass
-
 
 __all__ = [
     'MPDError',
@@ -17,6 +15,7 @@ __all__ = [
 
 class ErrorCode(Enum):
     '''MPD Error codes included in ACK responses.'''
+
     NOT_LIST = 1
     ARG = 2
     PASSWORD = 3
@@ -63,6 +62,7 @@ class CommandError(MPDError):
         partial: The (maybe empty) list of lines representing a partial
                  response.
     '''
+
     code: ErrorCode
     line: int
     command: str
@@ -71,13 +71,12 @@ class CommandError(MPDError):
 
     def __post_init__(self):
         codetext = f'{self.code.name}/{self.code.value}'
-        super().__init__(
-            f'[{codetext}@{self.line}] {{{self.command}}} {self.message}'
-        )
+        super().__init__(f'[{codetext}@{self.line}] {{{self.command}}} {self.message}')
 
 
 class URINotFoundError(CommandError):
     '''Wraps an error 50 from MPD.'''
+
     def __init__(self, *args):
         super().__init__(ErrorCode.NO_EXIST, *args)
 
@@ -103,5 +102,4 @@ def get_error_constructor(error_code: ErrorCode) -> ErrorFactory:
         A function that constructs the correct exception with the remaining
         arguments.
     '''
-    return (ERRORS.get(error_code) or
-            (lambda *args: CommandError(error_code, *args)))
+    return ERRORS.get(error_code) or (lambda *args: CommandError(error_code, *args))
