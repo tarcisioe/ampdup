@@ -1,9 +1,10 @@
+"""Tests for parsing songs."""
 from ampdup import Song
 from ampdup.parsing import from_lines
 
 
 def test_song_from_lines():
-    '''Create a song object from lines.'''
+    """Create a song object from lines."""
     lines = [
         'file: path/to/song.mp3',
         'Last-Modified: 2018-02-07T09:41:04Z',

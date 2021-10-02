@@ -1,4 +1,4 @@
-'''Idle client module.'''
+"""Idle client module."""
 
 from typing import List
 
@@ -10,10 +10,10 @@ from .util import has_any_prefix
 
 
 class IdleMPDClient(BaseMPDClient):
-    '''Client that is only capable of running the idle command.
+    """Client that is only capable of running the idle command.
 
     More information in the idle() method docstring.
-    '''
+    """
 
     async def run_command(self, command: str):
         if not has_any_prefix(command, ('idle', 'noidle')):
@@ -24,7 +24,7 @@ class IdleMPDClient(BaseMPDClient):
         return await super().run_command(command)
 
     async def idle(self, *subsystems: Subsystem) -> List[Subsystem]:
-        '''Run the idle command, fetching events from the player.
+        """Run the idle command, fetching events from the player.
 
         Args:
             *subsystems (Subsystem):
@@ -34,7 +34,7 @@ class IdleMPDClient(BaseMPDClient):
         Returns:
             List[Subsystem]: subsystems that changed since the command was
                              called.
-        '''
+        """
         subsystem_names = [s.value for s in subsystems]
         command = ' '.join(['idle', *subsystem_names])
 
@@ -43,5 +43,5 @@ class IdleMPDClient(BaseMPDClient):
         return [Subsystem(s) for _, s in changed]
 
     async def noidle(self):
-        '''Cancel the current idle command.'''
+        """Cancel the current idle command."""
         return await self.connection.connection.write_line('noidle')

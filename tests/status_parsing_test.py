@@ -1,9 +1,10 @@
+"""Tests for status parsing."""
 from ampdup import Single, State, Status
 from ampdup.parsing import from_lines
 
 
 def test_status_from_lines():
-    '''Create a status object from lines.'''
+    """Create a status object from lines."""
     lines = [
         'volume: 55',
         'repeat: 0',

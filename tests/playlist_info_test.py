@@ -1,9 +1,10 @@
+"""Tests for playlist info."""
 from ampdup import Song
 from ampdup.parsing import parse_playlist
 
 
 def test_song_from_lines():
-    '''Create a playlist (list of Song) from lines.'''
+    """Create a playlist (list of Song) from lines."""
     lines = [
         'file: Abney Park/Ancient World/Ancient World.m4a',
         'Last-Modified: 2018-02-06T22:36:06Z',

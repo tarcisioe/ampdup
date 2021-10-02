@@ -1,4 +1,4 @@
-'''Classes for raising when errors happen.'''
+"""Classes for raising when errors happen."""
 from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Dict, List
@@ -14,7 +14,7 @@ __all__ = [
 
 
 class ErrorCode(Enum):
-    '''MPD Error codes included in ACK responses.'''
+    """MPD Error codes included in ACK responses."""
 
     NOT_LIST = 1
     ARG = 2
@@ -32,27 +32,27 @@ class ErrorCode(Enum):
 
 
 class MPDError(Exception):
-    '''Base class for errors raised by this library.'''
+    """Base class for errors raised by this library."""
 
 
 class ConnectionFailedError(MPDError):
-    '''Caused when a client fails to connect.'''
+    """Caused when a client fails to connect."""
 
 
 class ClientTypeError(MPDError):
-    '''Caused when trying to use the wrong type of client for an operation.
+    """Caused when trying to use the wrong type of client for an operation.
 
     Example: using the idle client for playback control and vice-versa.
-    '''
+    """
 
 
 class NoCurrentSongError(MPDError):
-    '''Caused where there is no current song playing and one is expected.'''
+    """Caused where there is no current song playing and one is expected."""
 
 
 @dataclass
 class CommandError(MPDError):
-    '''Wraps an error from MPD (an ACK response with error code and reason).
+    """Wraps an error from MPD (an ACK response with error code and reason).
 
     Members:
         code: The MPD error code.
@@ -61,7 +61,7 @@ class CommandError(MPDError):
         message: The error message provided by MPD, unchanged.
         partial: The (maybe empty) list of lines representing a partial
                  response.
-    '''
+    """
 
     code: ErrorCode
     line: int
@@ -75,7 +75,7 @@ class CommandError(MPDError):
 
 
 class URINotFoundError(CommandError):
-    '''Wraps an error 50 from MPD.'''
+    """Wraps an error 50 from MPD."""
 
     def __init__(self, *args):
         super().__init__(ErrorCode.NO_EXIST, *args)
@@ -90,7 +90,7 @@ ERRORS: Dict[ErrorCode, ErrorFactory] = {
 
 
 def get_error_constructor(error_code: ErrorCode) -> ErrorFactory:
-    '''Get the error constructor for an error code, or a generic one.
+    """Get the error constructor for an error code, or a generic one.
 
     If the error code is not mapped to an exception type, a factory function
     for CommandError with the correct code is returned.
@@ -101,5 +101,5 @@ def get_error_constructor(error_code: ErrorCode) -> ErrorFactory:
     Returns:
         A function that constructs the correct exception with the remaining
         arguments.
-    '''
+    """
     return ERRORS.get(error_code) or (lambda *args: CommandError(error_code, *args))
