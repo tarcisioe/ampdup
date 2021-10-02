@@ -1,9 +1,10 @@
+"""Tests for parsing stats.:w"""
 from ampdup import Stats
 from ampdup.parsing import from_lines
 
 
 def test_status_from_lines():
-    '''Create a status object from lines.'''
+    """Create a status object from lines."""
     lines = [
         'uptime: 363249',
         'playtime: 11000',

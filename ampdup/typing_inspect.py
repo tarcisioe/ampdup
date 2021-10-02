@@ -1,11 +1,11 @@
-'''This module mimics some functionality from typing-inspect.
+"""This module mimics some functionality from typing-inspect.
 
 Original code can be found at github.com/ilevkivskyi/typing_inspect.
 
 Until typing-inspect stops being experimental or gets standardized (one can
 dream), this simpler version will be used. Notice this only needs to support
 Python 3.7+.
-'''
+"""
 
 # The original typing-inspect module is published on PyPI under the MIT
 # license.
@@ -33,26 +33,29 @@ Python 3.7+.
 # SOFTWARE.
 
 
-from typing import Callable
-
 from typing import (  # type: ignore
-    ClassVar, Generic, Tuple, Type, Union, _GenericAlias
+    Callable,
+    ClassVar,
+    Generic,
+    Tuple,
+    Type,
+    Union,
+    _GenericAlias,
 )
 
 
 def is_union_type(tp: Type) -> bool:
-    '''Test if the type is a union type. Examples::
-        is_union_type(int) == False
-        is_union_type(Union) == True
-        is_union_type(Union[int, int]) == False
-        is_union_type(Union[T, int]) == True
-    '''
-    return (tp is Union or
-            isinstance(tp, _GenericAlias) and tp.__origin__ is Union)
+    """Test if the type is a union type. Examples::
+    is_union_type(int) == False
+    is_union_type(Union) == True
+    is_union_type(Union[int, int]) == False
+    is_union_type(Union[T, int]) == True
+    """
+    return tp is Union or isinstance(tp, _GenericAlias) and tp.__origin__ is Union
 
 
 def get_origin(tp):
-    '''Get the unsubscripted version of a type. Supports generic types, Union,
+    """Get the unsubscripted version of a type. Supports generic types, Union,
     Callable, and Tuple. Returns None for unsupported types. Examples::
         get_origin(int) == None
         get_origin(ClassVar[int]) == None
@@ -60,7 +63,7 @@ def get_origin(tp):
         get_origin(Generic[T]) == Generic
         get_origin(Union[T, int]) == Union
         get_origin(List[Tuple[T, T]][int]) == list  # List prior to Python 3.7
-    '''
+    """
     if isinstance(tp, _GenericAlias):
         return tp.__origin__ if tp.__origin__ is not ClassVar else None
     if tp is Generic:
@@ -69,7 +72,7 @@ def get_origin(tp):
 
 
 def get_args(tp: Type) -> Tuple:
-    '''Get type arguments with all substitutions performed. For unions,
+    """Get type arguments with all substitutions performed. For unions,
     basic simplifications used by Union constructor are performed.
     On versions prior to 3.7 if `evaluate` is False (default),
     report result as nested tuple, this matches
@@ -85,7 +88,7 @@ def get_args(tp: Type) -> Tuple:
         get_args(Dict[int, Tuple[T, T]][Optional[int]], evaluate=True) == \
                  (int, Tuple[Optional[int], Optional[int]])
         get_args(Callable[[], T][int], evaluate=True) == ([], int,)
-    '''
+    """
     if isinstance(tp, _GenericAlias):
         res = tp.__args__
         if get_origin(tp) is Callable and res[0] is not Ellipsis:
@@ -95,7 +98,7 @@ def get_args(tp: Type) -> Tuple:
 
 
 def is_optional_type(tp: Type) -> bool:
-    '''Returns `True` if the type is `type(None)`, or is a direct `Union` to
+    """Returns `True` if the type is `type(None)`, or is a direct `Union` to
        `type(None)`, such as `Optional[T]`.
 
     NOTE: this method inspects nested `Union` arguments but not `TypeVar`
@@ -108,7 +111,7 @@ def is_optional_type(tp: Type) -> bool:
     Users wishing to check for optionality in types relying on type variables
     might wish to use this method in  combination with `get_constraints` and
     `get_bound`
-    '''
+    """
 
     if tp is type(None):  # noqa
         return True

@@ -1,17 +1,17 @@
-'''Types for MPD information.'''
+"""Types for MPD information."""
 from enum import Enum
-from typing import NamedTuple, Optional, Tuple, NewType
-
+from typing import NamedTuple, NewType, Optional, Tuple
 
 TimeRange = NewType('TimeRange', Tuple[Optional[float], Optional[float]])
 
 
 class SongId(int):
-    '''Strong alias for song ids.'''
+    """Strong alias for song ids."""
 
 
 class Song(NamedTuple):
-    '''Type representing the static data about a playable song in MPD.'''
+    """Type representing the static data about a playable song in MPD."""
+
     file: str
     time: int
     duration: float
@@ -37,7 +37,8 @@ class Song(NamedTuple):
 
 
 class SearchType(Enum):
-    '''Special types for searching the database.'''
+    """Special types for searching the database."""
+
     ANY = 'any'
     FILE = 'file'
     BASE = 'base'
@@ -45,21 +46,24 @@ class SearchType(Enum):
 
 
 class Single(Enum):
-    '''"single" setting state.'''
+    """ "single" setting state."""
+
     DISABLED = '0'
     ENABLED = '1'
     ONESHOT = 'oneshot'
 
 
 class State(Enum):
-    '''Player state.'''
+    """Player state."""
+
     PLAY = 'play'
     STOP = 'stop'
     PAUSE = 'pause'
 
 
 class Status(NamedTuple):
-    '''Type representing the static data about a playable song in MPD.'''
+    """Type representing the static data about a playable song in MPD."""
+
     repeat: bool
     random: bool
     single: Single
@@ -86,7 +90,8 @@ class Status(NamedTuple):
 
 
 class Stats(NamedTuple):
-    '''Statistics about the player.'''
+    """Statistics about the player."""
+
     uptime: int
     playtime: int
     artists: int
@@ -97,7 +102,8 @@ class Stats(NamedTuple):
 
 
 class Subsystem(Enum):
-    '''Enumeration of available subsystems for idle to listen to.'''
+    """Enumeration of available subsystems for idle to listen to."""
+
     DATABASE = 'database'
     UPDATE = 'update'
     STORED_PLAYLIST = 'stored_playlist'
@@ -115,7 +121,8 @@ class Subsystem(Enum):
 
 
 class Tag(Enum):
-    '''Tags supported by MPD.'''
+    """Tags supported by MPD."""
+
     ARTIST = 'artist'
     ARTISTSORT = 'artistsort'
     ALBUM = 'album'
