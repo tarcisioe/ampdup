@@ -1,13 +1,21 @@
+# pylint: disable=all
 import shlex
-
-from asyncio import create_task, get_running_loop, run, sleep, CancelledError
 from typing import Any, Callable, Dict, List, Tuple, Union
 
+from anyio import create_task_group, run, sleep
+from anyio.to_thread import run_sync
 from wrapt import decorator
 
 from ampdup import (
-    CommandError, ConnectionFailedError, IdleMPDClient, MPDClient, MPDError,
-    SearchType, Single, SongId, Tag
+    CommandError,
+    ConnectionFailedError,
+    IdleMPDClient,
+    MPDClient,
+    MPDError,
+    SearchType,
+    Single,
+    SongId,
+    Tag,
 )
 
 
@@ -20,9 +28,7 @@ def range_arg(argstring: str) -> List[Any]:
         x, y = [int(n) for n in argstring.split(':', maxsplit=1)]
         return [(x, y)]
     except ValueError:
-        raise CommandSyntaxError(
-            'takes a range (start:end).'
-        )
+        raise CommandSyntaxError('takes a range (start:end).')
 
 
 def position_or_range(argstring: str) -> List[Any]:
@@ -37,9 +43,7 @@ def position_or_range(argstring: str) -> List[Any]:
     except ValueError:
         pass
 
-    raise CommandSyntaxError(
-        'takes either an integer or a range (start:end).'
-    )
+    raise CommandSyntaxError('takes either an integer or a range (start:end).')
 
 
 def one_uri(argstring: str) -> List[Any]:
@@ -53,12 +57,10 @@ def add_id_args(argstring: str) -> List[Any]:
     try:
         uri, *pos = shlex.split(argstring)
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes one URI and an optional position'
-        ) from e
+        raise CommandSyntaxError('takes one URI and an optional position') from e
 
     if pos:
-        pos_arg, = pos
+        (pos_arg,) = pos
         position = int(pos_arg)
         return [uri, position]
     return [uri]
@@ -68,24 +70,17 @@ def id_and_timerange(argstring: str) -> List[Any]:
     try:
         first, second = argstring.split()
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes two arguments (song id and time range).'
-        ) from e
+        raise CommandSyntaxError('takes two arguments (song id and time range).') from e
 
     try:
         song_id = SongId(first)
     except ValueError as e:
-        raise CommandSyntaxError(
-            'needs an integer as song id.'
-        ) from e
+        raise CommandSyntaxError('needs an integer as song id.') from e
 
     try:
-        start, end = [float(n) if n else None
-                      for n in second.split(':', maxsplit=1)]
+        start, end = [float(n) if n else None for n in second.split(':', maxsplit=1)]
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes a range of floats as time range.'
-        ) from e
+        raise CommandSyntaxError('takes a range of floats as time range.') from e
 
     return [song_id, (start, end)]
 
@@ -94,16 +89,12 @@ def tag_and_needle(argstring: str) -> List[Any]:
     try:
         first, second = argstring.split()
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes two arguments (tag and needle).'
-        ) from e
+        raise CommandSyntaxError('takes two arguments (tag and needle).') from e
 
     try:
         tag = Tag(first)
     except ValueError as e:
-        raise CommandSyntaxError(
-            'needs a supported tag.'
-        ) from e
+        raise CommandSyntaxError('needs a supported tag.') from e
 
     return [tag, second]
 
@@ -115,24 +106,17 @@ def priority_and_range(argstring: str) -> List[Any]:
     try:
         first, second = argstring.split()
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes two arguments (priority and range).'
-        ) from e
+        raise CommandSyntaxError('takes two arguments (priority and range).') from e
 
     try:
         priority = int(first)
     except ValueError as e:
-        raise CommandSyntaxError(
-            'needs an integer as priority.'
-        ) from e
+        raise CommandSyntaxError('needs an integer as priority.') from e
 
     try:
-        start, end = [int(n) if n else None
-                      for n in second.split(':', maxsplit=1)]
+        start, end = [int(n) if n else None for n in second.split(':', maxsplit=1)]
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes a range.'
-        ) from e
+        raise CommandSyntaxError('takes a range.') from e
 
     return [priority, (start, end)]
 
@@ -141,23 +125,17 @@ def priority_and_id(argstring: str) -> List[Any]:
     try:
         first, second = argstring.split()
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes two arguments (priority and song id).'
-        ) from e
+        raise CommandSyntaxError('takes two arguments (priority and song id).') from e
 
     try:
         priority = int(first)
     except ValueError as e:
-        raise CommandSyntaxError(
-            'needs an integer as priority.'
-        ) from e
+        raise CommandSyntaxError('needs an integer as priority.') from e
 
     try:
         song_id = SongId(second)
     except ValueError as e:
-        raise CommandSyntaxError(
-            'needs an integer as song id.'
-        ) from e
+        raise CommandSyntaxError('needs an integer as song id.') from e
 
     return [priority, song_id]
 
@@ -166,9 +144,7 @@ def type_what(argstring: str) -> List[Any]:
     try:
         search_type_str, what = shlex.split(argstring)
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes two arguments (type and what).'
-        ) from e
+        raise CommandSyntaxError('takes two arguments (type and what).') from e
 
     search_type: Union[Tag, SearchType]
 
@@ -210,7 +186,7 @@ def filter_and_sort(argstring: str) -> List[Any]:
         return [filter_expression, sort]
 
     try:
-        descending_text, = remainder
+        (descending_text,) = remainder
     except ValueError as e:
         raise CommandSyntaxError(
             'takes up to three arguments (filter expression, sort and descending).'
@@ -225,10 +201,9 @@ def filter_and_sort(argstring: str) -> List[Any]:
 
 
 @decorator
-def optional_dec(wrapped: ArgFunc,
-                 _: Any,
-                 args: Tuple[str],
-                 _2: Dict[str, Any]) -> List[Any]:
+def optional_dec(
+    wrapped: ArgFunc, _: Any, args: Tuple[str], _2: Dict[str, Any]
+) -> List[Any]:
     if args == ('',):
         return []
 
@@ -250,16 +225,12 @@ def from_and_to(argstring: str) -> List[Any]:
     try:
         start, end = shlex.split(argstring)
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes two arguments (from and to).'
-        )
+        raise CommandSyntaxError('takes two arguments (from and to).') from e
 
     try:
         return [*position_or_range(start), int(end)]
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes an integer as the "to" argument.'
-        ) from e
+        raise CommandSyntaxError('takes an integer as the "to" argument.') from e
 
 
 def one_int(error: str) -> Callable[[str], List[Any]]:
@@ -267,9 +238,8 @@ def one_int(error: str) -> Callable[[str], List[Any]]:
         try:
             return [int(argstring)]
         except ValueError as e:
-            raise CommandSyntaxError(
-                error
-            ) from e
+            raise CommandSyntaxError(error) from e
+
     return inner
 
 
@@ -279,9 +249,8 @@ def two_ints(error: str) -> Callable[[str], List[Any]]:
             x, y = shlex.split(argstring)
             return [int(x), int(y)]
         except ValueError as e:
-            raise CommandSyntaxError(
-                error
-            ) from e
+            raise CommandSyntaxError(error) from e
+
     return inner
 
 
@@ -290,9 +259,8 @@ def one_float(error: str) -> Callable[[str], List[Any]]:
         try:
             return [float(argstring)]
         except ValueError as e:
-            raise CommandSyntaxError(
-                error
-            ) from e
+            raise CommandSyntaxError(error) from e
+
     return inner
 
 
@@ -300,9 +268,7 @@ def single_mode(argstring: str) -> List[Any]:
     try:
         return [Single(argstring)]
     except ValueError as e:
-        raise CommandSyntaxError(
-            'takes either 0, 1 or oneshot.'
-        ) from e
+        raise CommandSyntaxError('takes either 0, 1 or oneshot.') from e
 
 
 def int_and_float(error: str) -> Callable[[str], List[Any]]:
@@ -311,9 +277,8 @@ def int_and_float(error: str) -> Callable[[str], List[Any]]:
             x, y = shlex.split(argstring)
             return [int(x), float(y)]
         except ValueError as e:
-            raise CommandSyntaxError(
-                error
-            ) from e
+            raise CommandSyntaxError(error) from e
+
     return inner
 
 
@@ -375,11 +340,9 @@ def parse_args(command: str, argstring: str = '') -> List[Any]:
 
 
 async def commands(client: MPDClient):
-    loop = get_running_loop()
     while True:
         try:
-            command: str = await loop.run_in_executor(None,
-                                                      lambda: input('>>> '))
+            command: str = await run_sync(input, '>>> ')
         except EOFError:
             print()
             break
@@ -397,7 +360,6 @@ async def commands(client: MPDClient):
                     await client.reconnect()
                     result = await m(*args)
             else:
-                pass
                 result = await client.run_command(command.strip('!'))
         except CommandError as e:
             exc_name = type(e).__name__
@@ -416,31 +378,32 @@ async def commands(client: MPDClient):
 
 
 async def monitor(client: IdleMPDClient):
-    try:
-        while True:
+    while True:
+        try:
+            changes = await client.idle()
+        except ConnectionFailedError:
+            await sleep(1)
             try:
-                changes = await client.idle()
+                await client.reconnect()
             except ConnectionFailedError:
-                await sleep(1)
-                try:
-                    await client.reconnect()
-                except ConnectionFailedError:
-                    continue
-            else:
-                for line in changes:
-                    print(line)
-    except CancelledError:
-        return
+                continue
+        else:
+            for line in changes:
+                print(line)
 
 
 async def main():
-    async with MPDClient.make_unix('~/.mpd/socket') as m, IdleMPDClient.make_unix('~/.mpd/socket') as i:
-    # async with MPDClient.make('localhost', 6600) as m, IdleMPDClient.make('localhost', 6600) as i:  # noqa
-        loop = get_running_loop()
-        idle = loop.create_task(monitor(i))
-        await commands(m)
-        idle.cancel()
+    # async with MPDClient.make_unix('~/.mpd/socket') as m, IdleMPDClient.make_unix(
+    #    '~/.mpd/socket'
+    # ) as i:
+    async with MPDClient.make('localhost', 6600) as m, IdleMPDClient.make(
+        'localhost', 6600
+    ) as i:  # noqa
+        async with create_task_group() as tg:
+            tg.start_soon(monitor, i)
+            await commands(m)
+            tg.cancel_scope.cancel()
 
 
 if __name__ == '__main__':
-    run(main())
+    run(main)

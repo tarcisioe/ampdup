@@ -1,42 +1,36 @@
 """Module for connection-related functionality."""
-import asyncio
-from asyncio import StreamReader, StreamWriter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Union
+
+from anyio import connect_tcp, connect_unix
+from anyio.abc import SocketStream
+from anyio.streams.buffered import BufferedByteReceiveStream
 
 from .errors import ConnectionFailedError
 
 
-@dataclass(frozen=True)
+@dataclass
 class Socket:
-    """An async socket model based on asyncio."""
+    """An async socket higher-level abstraction."""
 
-    reader: StreamReader
-    writer: StreamWriter
+    sock: SocketStream
+    buffered: BufferedByteReceiveStream = field(init=False)
+
+    def __post_init__(self):
+        self.buffered = BufferedByteReceiveStream(self.sock)
 
     async def write(self, data: bytes):
         """Write data to the socket."""
-        self.writer.write(data)
-        try:
-            await self.writer.drain()
-        except Exception as e:
-            raise ConnectionFailedError() from e
+        await self.sock.send(data)
 
     async def readline(self) -> bytes:
         """Read from the socket up to a newline."""
-        x = await self.reader.readline()
-        if not x.endswith(b'\n'):
-            raise ConnectionFailedError('Connection aborted while reading.')
-        return x
+        return await self.buffered.receive_until(b'\n', 0xFFFFFFFF)
 
     async def close(self):
         """Close the socket."""
-        self.writer.close()
-        try:
-            await self.writer.wait_closed()
-        except BrokenPipeError:
-            pass
+        await self.sock.aclose()
 
 
 @dataclass(frozen=True)
@@ -48,7 +42,7 @@ class TCPConnector:
 
     async def connect(self) -> Socket:
         """Open a socket using a TCP connection."""
-        return Socket(*await asyncio.open_connection(self.address, self.port))
+        return Socket(await connect_tcp(self.address, self.port))
 
 
 @dataclass
@@ -60,7 +54,7 @@ class UnixConnector:
     async def connect(self) -> Socket:
         """Open a Unix socket."""
         path = str(self.path.expanduser().absolute())
-        return Socket(*await asyncio.open_unix_connection(path))
+        return Socket(await connect_unix(path))
 
 
 Connector = Union[TCPConnector, UnixConnector]
