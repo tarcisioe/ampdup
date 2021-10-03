@@ -18,6 +18,7 @@ pytest-cov = "^2.12.1"
 pytest-mock = "^3.6.1"
 typer = "^0.3.2"
 typing-extensions = "^3.10.0.2"
+trio = "^0.19.0"
 
 [tool.black]
 skip_string_normalization = true

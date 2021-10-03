@@ -1,13 +1,14 @@
 """Module for connection-related functionality."""
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Union
+from typing import Coroutine, Optional
 
-from anyio import connect_tcp, connect_unix
+from anyio import IncompleteRead, connect_tcp, connect_unix
 from anyio.abc import SocketStream
 from anyio.streams.buffered import BufferedByteReceiveStream
+from typing_extensions import Protocol
 
-from .errors import ConnectionFailedError
+from .errors import ConnectionFailedError, ReceiveError
 
 
 @dataclass
@@ -26,38 +27,31 @@ class Socket:
 
     async def readline(self) -> bytes:
         """Read from the socket up to a newline."""
-        return await self.buffered.receive_until(b'\n', 0xFFFFFFFF)
+        try:
+            return await self.buffered.receive_until(b'\n', 0xFFFFFFFF)
+        except IncompleteRead as e:
+            raise ReceiveError('Connection closed before a newline was sent.') from e
 
-    async def close(self):
+    @staticmethod
+    async def connect_tcp(address: str, port: int) -> 'Socket':
+        """Create a socket with a TCP socket stream."""
+        return Socket(await connect_tcp(address, port))
+
+    @staticmethod
+    async def connect_unix(path: Path) -> 'Socket':
+        """Create a socket with a Unix-socket stream."""
+        return Socket(await connect_unix(path.expanduser().absolute()))
+
+    async def aclose(self):
         """Close the socket."""
         await self.sock.aclose()
 
 
-@dataclass(frozen=True)
-class TCPConnector:
-    """Factory for TCP-based connections."""
+class Connector(Protocol):
+    """A"""
 
-    address: str
-    port: int
-
-    async def connect(self) -> Socket:
-        """Open a socket using a TCP connection."""
-        return Socket(await connect_tcp(self.address, self.port))
-
-
-@dataclass
-class UnixConnector:
-    """Factory for Unix-socket-based connections."""
-
-    path: Path
-
-    async def connect(self) -> Socket:
-        """Open a Unix socket."""
-        path = str(self.path.expanduser().absolute())
-        return Socket(await connect_unix(path))
-
-
-Connector = Union[TCPConnector, UnixConnector]
+    def __call__(self) -> Coroutine[None, None, Socket]:
+        ...
 
 
 @dataclass
@@ -65,12 +59,12 @@ class Connection:
     """Abstraction for a connection to MPD"""
 
     connector: Connector
-    connection: Optional[Socket] = None
+    socket: Optional[Socket] = None
 
     async def connect(self):
         """Connect to the MPD server."""
         try:
-            self.connection = await self.connector.connect()
+            self.socket = await self.connector()
         except OSError as e:
             raise ConnectionFailedError('Could not connect to MPD') from e
 
@@ -81,19 +75,19 @@ class Connection:
 
     async def write_line(self, command: str):
         """Send a line through the connection."""
-        if self.connection is not None:
-            await self.connection.write(command.encode() + b'\n')
+        if self.socket is not None:
+            await self.socket.write(command.encode() + b'\n')
             return
         raise ConnectionFailedError('Not connected.')
 
     async def read_line(self) -> str:
         """Read a line from the connection."""
-        if self.connection is not None:
-            line = await self.connection.readline()
+        if self.socket is not None:
+            line = await self.socket.readline()
             return line.decode().strip('\n')
         raise ConnectionFailedError('Not connected.')
 
-    async def close(self):
+    async def aclose(self):
         """Close the connection."""
-        if self.connection is not None:
-            await self.connection.close()
+        if self.socket is not None:
+            await self.socket.aclose()

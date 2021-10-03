@@ -1,5 +1,6 @@
 """Base client for MPD."""
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import AsyncGenerator, List, Optional, Union
 
@@ -7,7 +8,7 @@ from anyio import create_memory_object_stream, create_task_group
 from anyio.abc import ObjectStream, TaskGroup
 from anyio.streams.stapled import StapledObjectStream
 
-from .connection import Connection, Connector, TCPConnector, UnixConnector
+from .connection import Connection, Connector, Socket
 from .errors import CommandError, ConnectionFailedError
 from .parsing import parse_error
 from .util import asynccontextmanager
@@ -135,13 +136,13 @@ class BaseMPDClient:
         """Connect to the MPD client using TCP."""
         self.connection = MPDConnection(tg)
 
-        await self.connection.connect(TCPConnector(address, port))
+        await self.connection.connect(partial(Socket.connect_tcp, address, port))
 
     async def connect_unix(self, path: Path, tg: TaskGroup):
         """Connect to the MPD client using Unix socket."""
         self.connection = MPDConnection(tg)
 
-        await self.connection.connect(UnixConnector(Path(path)))
+        await self.connection.connect(partial(Socket.connect_unix, path))
 
     async def disconnect(self):
         """Disconnect from the MPD server."""
