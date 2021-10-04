@@ -32,6 +32,16 @@ class Socket:
         except IncompleteRead as e:
             raise ReceiveError('Connection closed before a newline was sent.') from e
 
+    async def aclose(self):
+        """Close the socket."""
+        await self.sock.aclose()
+
+    async def __aenter__(self) -> 'Socket':
+        return self
+
+    async def __aexit__(self, _0, _1, _2):
+        await self.aclose()
+
     @staticmethod
     async def connect_tcp(address: str, port: int) -> 'Socket':
         """Create a socket with a TCP socket stream."""
@@ -40,15 +50,11 @@ class Socket:
     @staticmethod
     async def connect_unix(path: Path) -> 'Socket':
         """Create a socket with a Unix-socket stream."""
-        return Socket(await connect_unix(path.expanduser().absolute()))
-
-    async def aclose(self):
-        """Close the socket."""
-        await self.sock.aclose()
+        return Socket(await connect_unix(path))
 
 
 class Connector(Protocol):
-    """A"""
+    """A factory for Socket objects."""
 
     def __call__(self) -> Coroutine[None, None, Socket]:
         ...
