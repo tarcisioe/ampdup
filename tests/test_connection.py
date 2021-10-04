@@ -1,6 +1,7 @@
 """Tests for the connection module."""
-from contextlib import asynccontextmanager
+from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import AsyncContextManager, AsyncIterator, Callable, Coroutine
 
@@ -16,9 +17,22 @@ SocketHandler = Callable[[SocketStream], Coroutine[None, None, None]]
 
 
 class ServeFunction(Protocol):
-    """Hack because mypy hates callable attributes."""
+    """Callable that makes a server serve.
+
+    Hack because mypy hates callable attributes.
+    """
 
     def __call__(self) -> AsyncContextManager[None]:
+        ...
+
+
+class SocketStreamMaker(Protocol):
+    """Callable that produces a SocketStream.
+
+    Hack because mypy hates callable attributes.
+    """
+
+    def __call__(self) -> Coroutine[None, None, SocketStream]:
         ...
 
 
@@ -42,11 +56,34 @@ async def unix_server(
         yield serve_task
 
 
+@asynccontextmanager
+async def tcp_server(
+    local_host: str,
+    local_port: int,
+    handle: SocketHandler,
+) -> AsyncIterator[ServeFunction]:
+    """Create a temporary unix server."""
+    from anyio import create_task_group, create_tcp_listener
+
+    async with await create_tcp_listener(
+        local_host=local_host, local_port=local_port
+    ) as server:
+
+        @asynccontextmanager
+        async def serve_task():
+            async with create_task_group() as tg:
+                tg.start_soon(server.serve, handle)
+                yield
+                tg.cancel_scope.cancel()
+
+        yield serve_task
+
+
 @dataclass(frozen=True)
 class ServerData:
     """Aggregate base for the *_unix_server fixtures."""
 
-    sock_path: Path
+    connect_to_server: SocketStreamMaker
     serve: ServeFunction
 
 
@@ -72,7 +109,11 @@ async def receiving_unix_server(tmpdir: Path) -> AsyncIterator[ReceivingServerDa
             await received.send(await buffered.receive_until(b'\n', 0xFFFFFFFF))
 
     async with unix_server(sock_path, handle) as serve_task:
-        yield ReceivingServerData(sock_path, serve_task, received.receive_stream)
+        yield ReceivingServerData(
+            partial(connect_unix, sock_path),
+            serve_task,
+            received.receive_stream,
+        )
 
 
 @dataclass
@@ -102,7 +143,7 @@ async def sending_unix_server(tmpdir: Path) -> AsyncIterator[ServerData]:
     handler = ConfigurableSendingHandler(b'Test data.\n')
 
     async with unix_server(sock_path, handler.handle) as serve_task:
-        yield SendingServerData(sock_path, serve_task, handler)
+        yield SendingServerData(partial(connect_unix, sock_path), serve_task, handler)
 
 
 @pytest.mark.anyio
@@ -111,9 +152,12 @@ async def test_socket_write(receiving_unix_server: ReceivingServerData):
 
     test_data = b'A line of data\n'
 
-    async with receiving_unix_server.serve(), await connect_unix(
-        receiving_unix_server.sock_path
-    ) as socket_stream:
+    async with AsyncExitStack() as s:
+        await s.enter_async_context(receiving_unix_server.serve())
+        socket_stream = await s.enter_async_context(
+            await receiving_unix_server.connect_to_server()
+        )
+
         socket = Socket(socket_stream)
         await socket.write(test_data)
         assert await receiving_unix_server.received.receive() == test_data.strip()
@@ -122,9 +166,12 @@ async def test_socket_write(receiving_unix_server: ReceivingServerData):
 @pytest.mark.anyio
 async def test_socket_readline(sending_unix_server: SendingServerData):
     """Test for the socket.readline method."""
-    async with sending_unix_server.serve(), await connect_unix(
-        sending_unix_server.sock_path
-    ) as socket_stream:
+    async with AsyncExitStack() as s:
+        await s.enter_async_context(sending_unix_server.serve())
+        socket_stream = await s.enter_async_context(
+            await sending_unix_server.connect_to_server()
+        )
+
         socket = Socket(socket_stream)
         assert await socket.readline() == b'Test data.'
 
@@ -136,9 +183,12 @@ async def test_socket_readline_no_newline(sending_unix_server: SendingServerData
 
     sending_unix_server.handler.data = b'No newline :('
 
-    async with sending_unix_server.serve(), await connect_unix(
-        sending_unix_server.sock_path
-    ) as socket_stream:
+    async with AsyncExitStack() as s:
+        await s.enter_async_context(sending_unix_server.serve())
+        socket_stream = await s.enter_async_context(
+            await sending_unix_server.connect_to_server()
+        )
+
         socket = Socket(socket_stream)
         with pytest.raises(ReceiveError):
             await socket.readline()
@@ -157,9 +207,12 @@ async def test_socket_readline_many_lines(sending_unix_server: SendingServerData
         '''
     ).encode()
 
-    async with sending_unix_server.serve(), await connect_unix(
-        sending_unix_server.sock_path
-    ) as socket_stream:
+    async with AsyncExitStack() as s:
+        await s.enter_async_context(sending_unix_server.serve())
+        socket_stream = await s.enter_async_context(
+            await sending_unix_server.connect_to_server()
+        )
+
         socket = Socket(socket_stream)
         assert await socket.readline() == b'Line 1'
         assert await socket.readline() == b'Line 2'
@@ -169,8 +222,11 @@ async def test_socket_readline_many_lines(sending_unix_server: SendingServerData
 @pytest.mark.anyio
 async def test_socket_aclose(sending_unix_server: SendingServerData):
     """Test for the socket.readline method in case no newline ever comes."""
-    async with sending_unix_server.serve(), await connect_unix(
-        sending_unix_server.sock_path
-    ) as socket_stream:
+    async with AsyncExitStack() as s:
+        await s.enter_async_context(sending_unix_server.serve())
+        socket_stream = await s.enter_async_context(
+            await sending_unix_server.connect_to_server()
+        )
+
         socket = Socket(socket_stream)
         await socket.aclose()
