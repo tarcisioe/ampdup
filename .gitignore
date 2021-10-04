@@ -4,6 +4,7 @@ dist/
 *.egg-info/
 htmlcov/
 .mypy_cache/
+pip-wheel-metadata/
 __pycache__
 .pytest_cache/
 *.sw?

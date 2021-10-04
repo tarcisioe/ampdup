@@ -85,6 +85,18 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4"
 toml = ["toml"]
 
 [[package]]
+name = "coverage-conditional-plugin"
+version = "0.4.0"
+description = "Conditional coverage based on any rules you define!"
+category = "dev"
+optional = false
+python-versions = ">=3.6,<4.0"
+
+[package.dependencies]
+coverage = ">=5.0,<6.0"
+packaging = ">=20.4"
+
+[[package]]
 name = "idna"
 version = "3.2"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -311,7 +323,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "cc781364783131c27b064f5987bd0e603e0610f14f5e7b1d60a58936b13b160e"
+content-hash = "18d16d00408341b210c13f680a1da9cf017387ea765ad96f9929b24e8f903adf"
 
 [metadata.files]
 anyio = [
@@ -438,6 +450,10 @@ coverage = [
     {file = "coverage-5.5-pp36-none-any.whl", hash = "sha256:f030f8873312a16414c0d8e1a1ddff2d3235655a2174e3648b4fa66b3f2f1079"},
     {file = "coverage-5.5-pp37-none-any.whl", hash = "sha256:2a3859cb82dcbda1cfd3e6f71c27081d18aa251d20a17d87d26d4cd216fb0af4"},
     {file = "coverage-5.5.tar.gz", hash = "sha256:ebe78fe9a0e874362175b02371bdfbee64d8edc42a044253ddf4ee7d3c15212c"},
+]
+coverage-conditional-plugin = [
+    {file = "coverage-conditional-plugin-0.4.0.tar.gz", hash = "sha256:3ca50bb03b32f8ba8cf63b18d830f334cb75f401579040dd5c61df1c4687fef0"},
+    {file = "coverage_conditional_plugin-0.4.0-py3-none-any.whl", hash = "sha256:3bf586f7b793a9e4e2950f7af32711012929b39d1a4b53a4829489e763fda2dc"},
 ]
 idna = [
     {file = "idna-3.2-py3-none-any.whl", hash = "sha256:14475042e284991034cb48e06f6851428fb14c4dc953acd9be9a5e95c7b6dd7a"},

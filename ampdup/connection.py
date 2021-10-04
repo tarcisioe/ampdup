@@ -48,7 +48,7 @@ class Socket:
         return Socket(await connect_tcp(address, port))
 
     @staticmethod
-    async def connect_unix(path: Path) -> 'Socket':
+    async def connect_unix(path: Path) -> 'Socket':  # pragma: is-windows
         """Create a socket with a Unix-socket stream."""
         return Socket(await connect_unix(path))
 
