@@ -1,7 +1,7 @@
 """Module for connection-related functionality."""
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Coroutine, Optional
+from typing import Optional
 
 from anyio import IncompleteRead, connect_tcp, connect_unix
 from anyio.abc import SocketStream
@@ -56,16 +56,20 @@ class Socket:
 class Connector(Protocol):
     """A factory for Socket objects."""
 
-    def __call__(self) -> Coroutine[None, None, Socket]:
+    async def __call__(self) -> Socket:
         ...
 
 
 @dataclass
 class Connection:
-    """Abstraction for a connection to MPD"""
+    """Abstraction for a connection to MPD.
+
+    A connection to MPD must begin with the server saying 'OK MPD' and
+    is completely line-oriented.
+    """
 
     connector: Connector
-    socket: Optional[Socket] = None
+    socket: Optional[Socket] = field(init=False, default=None)
 
     async def connect(self):
         """Connect to the MPD server."""
@@ -97,3 +101,10 @@ class Connection:
         """Close the connection."""
         if self.socket is not None:
             await self.socket.aclose()
+
+    async def __aenter__(self) -> 'Connection':
+        await self.connect()
+        return self
+
+    async def __aexit__(self, _0, _1, _2):
+        await self.aclose()

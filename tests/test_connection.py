@@ -2,13 +2,13 @@
 from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import AsyncContextManager, AsyncIterator, Callable, Coroutine
+from typing import AsyncContextManager, AsyncIterator, Callable, Coroutine, List
 
 import pytest
 from anyio.abc import Listener, ObjectReceiveStream, SocketStream
 from typing_extensions import Protocol
 
-from ampdup.connection import Socket
+from ampdup.connection import Connection, ConnectionFailedError, Socket
 
 SocketHandler = Callable[[SocketStream], Coroutine[None, None, None]]
 
@@ -150,12 +150,13 @@ async def receiving_server(
 class ConfigurableSendingHandler:
     """Configurable handler for sending different kinds of data to socket clients."""
 
-    data: bytes
+    data: List[bytes]
 
     async def handle(self, client: SocketStream):
         """Send data to a client."""
         async with client:
-            await client.send(self.data)
+            for d in self.data:
+                await client.send(d)
 
 
 @dataclass(frozen=True)
@@ -170,7 +171,7 @@ async def sending_server(
     server_factory: ServerFactory,
 ) -> AsyncIterator[SendingServerData]:
     """A unix-socket based server which sends data to its clients."""
-    handler = ConfigurableSendingHandler(b'Test data.\n')
+    handler = ConfigurableSendingHandler([b'Test data.\n'])
 
     async with server_factory.make_test_server(handler.handle) as server_data:
         yield SendingServerData(
@@ -213,7 +214,7 @@ async def test_socket_readline_no_newline(sending_server: SendingServerData):
     """Test for the socket.readline method in case no newline ever comes."""
     from ampdup.errors import ReceiveError
 
-    sending_server.handler.data = b'No newline :('
+    sending_server.handler.data = [b'No newline :(']
 
     async with AsyncExitStack() as s:
         await s.enter_async_context(sending_server.serve())
@@ -230,13 +231,15 @@ async def test_socket_readline_many_lines(sending_server: SendingServerData):
     """Test for the socket.readline method in case no newline ever comes."""
     from textwrap import dedent
 
-    sending_server.handler.data = dedent(
-        '''\
-        Line 1
-        Line 2
-        Line 3
-        '''
-    ).encode()
+    sending_server.handler.data = [
+        dedent(
+            '''\
+            Line 1
+            Line 2
+            Line 3
+            '''
+        ).encode(),
+    ]
 
     async with AsyncExitStack() as s:
         await s.enter_async_context(sending_server.serve())
@@ -257,3 +260,64 @@ async def test_socket_aclose(sending_server: SendingServerData):
         )
 
         await socket.aclose()
+
+
+async def fail_to_make_connector() -> Socket:  # pragma: no cover
+    """A Connector that always fails to create a socket."""
+    raise AssertionError('This connector always fails.')
+
+
+@pytest.mark.anyio
+async def test_connection_write_line_disconnected():
+    """Test that write_line signals error if there is no established connection."""
+    connection = Connection(fail_to_make_connector)
+
+    with pytest.raises(ConnectionFailedError):
+        await connection.write_line('Test.')
+
+
+@pytest.mark.anyio
+async def test_connection_read_line_disconnected():
+    """Test that write_line signals error if there is no established connection."""
+    connection = Connection(fail_to_make_connector)
+
+    with pytest.raises(ConnectionFailedError):
+        _ = await connection.read_line()
+
+
+@pytest.mark.anyio
+async def test_connection_connect(sending_server: SendingServerData):
+    """Test the Connection.connect method through the contextmanager interface."""
+    async with AsyncExitStack() as s:
+        await s.enter_async_context(sending_server.serve())
+
+        sending_server.handler.data = [b'OK MPD\n']
+
+        connection = Connection(sending_server.make_client)
+        await connection.connect()
+        await connection.aclose()
+
+
+@pytest.mark.anyio
+async def test_connection_connect_fail_if_server_replies_wrong_data(
+    sending_server: SendingServerData,
+):
+    """Test that Connection fails to connect if server replies with wrong data."""
+    async with AsyncExitStack() as s:
+        await s.enter_async_context(sending_server.serve())
+
+        sending_server.handler.data = [b'NOT OK MPD\n']
+
+        with pytest.raises(ConnectionFailedError):
+            _ = await s.enter_async_context(Connection(sending_server.make_client))
+
+
+@pytest.mark.anyio
+async def test_connection_connect_context_manager(sending_server: SendingServerData):
+    """Test the Connection.connect method through the contextmanager interface."""
+    async with AsyncExitStack() as s:
+        await s.enter_async_context(sending_server.serve())
+
+        sending_server.handler.data = [b'OK MPD\n']
+
+        _ = await s.enter_async_context(Connection(sending_server.make_client))
