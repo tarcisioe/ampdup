@@ -110,9 +110,9 @@ async def testing_server(tmp_path: Path, request) -> AsyncIterator[ServerTestDat
 
     from anyio import create_tcp_listener, create_unix_listener
 
-    from ._test_util import is_asyncio, is_windows
+    from ._test_util import is_windows
 
-    if request.param == 'unix' and (is_windows() or is_asyncio()):
+    if request.param == 'unix' and is_windows():
         pytest.skip()
 
     sock_path = tmp_path / 'testserver'
