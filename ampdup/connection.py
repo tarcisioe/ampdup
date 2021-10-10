@@ -13,7 +13,11 @@ from .errors import ConnectionFailedError, ReceiveError
 
 @dataclass
 class Socket:
-    """An async socket higher-level abstraction."""
+    """An async socket higher-level abstraction.
+
+    This abstraction adds the read_line method using a companion buffered stream,
+    and abstracts the usage of Unix sockets or TCP sockets.
+    """
 
     sock: SocketStream
     buffered: BufferedByteReceiveStream = field(init=False)
@@ -25,7 +29,7 @@ class Socket:
         """Write data to the socket."""
         await self.sock.send(data)
 
-    async def readline(self, *, timeout_seconds: float = 1) -> bytes:
+    async def read_line(self, *, timeout_seconds: Optional[float] = 1) -> bytes:
         """Read from the socket up to a newline.
 
         Args:
@@ -93,10 +97,10 @@ class Connection:
             return
         raise ConnectionFailedError('Not connected.')
 
-    async def read_line(self) -> str:
+    async def read_line(self, *, timeout_seconds: Optional[float] = 1) -> str:
         """Read a line from the connection."""
         if self.socket is not None:
-            line = await self.socket.readline()
+            line = await self.socket.read_line(timeout_seconds=timeout_seconds)
             return line.decode().strip('\n')
         raise ConnectionFailedError('Not connected.')
 

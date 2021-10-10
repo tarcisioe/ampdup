@@ -155,20 +155,20 @@ async def test_socket_write(testing_server: ServerTestData):
 
 
 @pytest.mark.anyio
-async def test_socket_readline(testing_server: ServerTestData):
-    """Test for the socket.readline method."""
+async def test_socket_read_line(testing_server: ServerTestData):
+    """Test for the socket.read_line method."""
     async with AsyncExitStack() as s:
         await s.enter_async_context(testing_server.serve())
         socket = await s.enter_async_context(
             await testing_server.make_client(),
         )
 
-        assert await socket.readline() == b'Test data.'
+        assert await socket.read_line() == b'Test data.'
 
 
 @pytest.mark.anyio
-async def test_socket_readline_timeout(testing_server: ServerTestData):
-    """Test for the socket.readline method in case no newline ever comes."""
+async def test_socket_read_line_timeout(testing_server: ServerTestData):
+    """Test for the socket.read_line method in case no newline ever comes."""
     from ampdup.errors import ReceiveError
 
     testing_server.handler.data = [b'No newline :(']
@@ -180,12 +180,12 @@ async def test_socket_readline_timeout(testing_server: ServerTestData):
         )
 
         with pytest.raises(ReceiveError):
-            await socket.readline(timeout_seconds=0.1)
+            await socket.read_line(timeout_seconds=0.1)
 
 
 @pytest.mark.anyio
-async def test_socket_readline_no_newline(testing_server: ServerTestData):
-    """Test for the socket.readline method in case no newline ever comes."""
+async def test_socket_read_line_no_newline(testing_server: ServerTestData):
+    """Test for the socket.read_line method in case no newline ever comes."""
     from ampdup.errors import ReceiveError
 
     testing_server.handler.data = [b'No newline :(']
@@ -197,12 +197,12 @@ async def test_socket_readline_no_newline(testing_server: ServerTestData):
         )
 
         with pytest.raises(ReceiveError):
-            await socket.readline()
+            await socket.read_line()
 
 
 @pytest.mark.anyio
-async def test_socket_readline_many_lines(testing_server: ServerTestData):
-    """Test for the socket.readline method in case no newline ever comes."""
+async def test_socket_read_line_many_lines(testing_server: ServerTestData):
+    """Test for the socket.read_line method in case no newline ever comes."""
     from textwrap import dedent
 
     testing_server.handler.data = [
@@ -219,14 +219,14 @@ async def test_socket_readline_many_lines(testing_server: ServerTestData):
         await s.enter_async_context(testing_server.serve())
         socket = await s.enter_async_context(await testing_server.make_client())
 
-        assert await socket.readline() == b'Line 1'
-        assert await socket.readline() == b'Line 2'
-        assert await socket.readline() == b'Line 3'
+        assert await socket.read_line() == b'Line 1'
+        assert await socket.read_line() == b'Line 2'
+        assert await socket.read_line() == b'Line 3'
 
 
 @pytest.mark.anyio
 async def test_socket_aclose(testing_server: ServerTestData):
-    """Test for the socket.readline method in case no newline ever comes."""
+    """Test for the socket.read_line method in case no newline ever comes."""
     async with AsyncExitStack() as s:
         await s.enter_async_context(testing_server.serve())
         socket = await s.enter_async_context(
