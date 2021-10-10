@@ -35,6 +35,10 @@ class MPDError(Exception):
     """Base class for errors raised by this library."""
 
 
+class ReceiveError(MPDError):
+    """Caused in case a connection receives unexpected data."""
+
+
 class ConnectionFailedError(MPDError):
     """Caused when a client fails to connect."""
 

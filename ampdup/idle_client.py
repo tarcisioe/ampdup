@@ -1,6 +1,6 @@
 """Idle client module."""
-
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 from .base_client import BaseMPDClient
 from .errors import ClientTypeError
@@ -9,11 +9,14 @@ from .types import Subsystem
 from .util import has_any_prefix
 
 
+@dataclass
 class IdleMPDClient(BaseMPDClient):
     """Client that is only capable of running the idle command.
 
     More information in the idle() method docstring.
     """
+
+    timeout_seconds: Optional[float] = field(init=False, default=None)
 
     async def run_command(self, command: str):
         if not has_any_prefix(command, ('idle', 'noidle')):
