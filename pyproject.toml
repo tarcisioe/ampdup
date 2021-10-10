@@ -10,7 +10,7 @@ keywords = ["mpd", "type", "async"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-anyio = "^3.3.2"
+anyio = "^3.3.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
