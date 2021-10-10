@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from anyio import IncompleteRead, connect_tcp, connect_unix
+from anyio import IncompleteRead, connect_tcp, connect_unix, move_on_after
 from anyio.abc import SocketStream
 from anyio.streams.buffered import BufferedByteReceiveStream
 from typing_extensions import Protocol
@@ -25,10 +25,17 @@ class Socket:
         """Write data to the socket."""
         await self.sock.send(data)
 
-    async def readline(self) -> bytes:
-        """Read from the socket up to a newline."""
+    async def readline(self, *, timeout_seconds: float = 1) -> bytes:
+        """Read from the socket up to a newline.
+
+        Args:
+            timeout_seconds: How many seconds to wait before timing out the read
+                             operation.
+        """
         try:
-            return await self.buffered.receive_until(b'\n', 0xFFFFFFFF)
+            with move_on_after(timeout_seconds):
+                return await self.buffered.receive_until(b'\n', 0xFFFFFFFF)
+            raise ReceiveError('Connection timed out during readline.')
         except IncompleteRead as e:
             raise ReceiveError('Connection closed before a newline was sent.') from e
 
@@ -73,11 +80,7 @@ class Connection:
 
     async def connect(self):
         """Connect to the MPD server."""
-        try:
-            self.socket = await self.connector()
-        except OSError as e:
-            raise ConnectionFailedError('Could not connect to MPD') from e
-
+        self.socket = await self.connector()
         result = await self.read_line()
 
         if not result.startswith('OK MPD'):
