@@ -1,17 +1,22 @@
 """Base client for MPD."""
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
-from typing import AsyncGenerator, List, Optional, Union
+from typing import AsyncIterator, List, Optional
 
 from anyio import create_memory_object_stream, create_task_group
 from anyio.abc import ObjectStream, TaskGroup
 from anyio.streams.stapled import StapledObjectStream
 
 from .connection import Connection, Connector, Socket
-from .errors import CommandError, ConnectionFailedError
+from .errors import ConnectionFailedError
+from .future import Future
 from .parsing import parse_error
 from .util import asynccontextmanager
+
+RawCommandResult = List[str]
 
 
 def make_object_stream() -> ObjectStream:
@@ -24,7 +29,7 @@ class MPDConnection:
     """A high-level connection to an MPD server."""
 
     task_group: TaskGroup
-    pending_commands: 'ObjectStream[ObjectStream[List[str]]]' = field(
+    pending_commands: ObjectStream[Future[RawCommandResult]] = field(
         default_factory=make_object_stream
     )
     connection: Optional[Connection] = None
@@ -62,25 +67,22 @@ class MPDConnection:
         if self.connection is None:
             raise ConnectionFailedError()
 
-        p = make_object_stream()
+        p: Future[RawCommandResult] = Future()
         await self.pending_commands.send(p)
 
         await self.connection.write_line(command)
 
-        result = await p.receive()
-
-        if isinstance(result, Exception):
-            raise result
+        result = await p.get()
 
         return result
 
     async def _read_response(
         self, timeout_seconds: Optional[float]
-    ) -> Union[List[str], CommandError]:
+    ) -> RawCommandResult:
         if self.connection is None:
             raise ConnectionFailedError()
 
-        lines: List[str] = []
+        lines: RawCommandResult = []
 
         while True:
             line = await self.connection.read_line(timeout_seconds=timeout_seconds)
@@ -88,7 +90,7 @@ class MPDConnection:
             if line.startswith('OK'):
                 break
             if line.startswith('ACK'):
-                return parse_error(line, lines)
+                raise parse_error(line, lines)
 
             lines.append(line)
 
@@ -103,9 +105,9 @@ class MPDConnection:
             try:
                 reply = await self._read_response(timeout_seconds)
             except Exception as e:  # pylint: disable=broad-except
-                await pending.send(e)  # type: ignore
+                pending.fail(e)
             else:
-                await pending.send(reply)  # type: ignore
+                pending.set(reply)
 
 
 @dataclass
@@ -117,7 +119,7 @@ class BaseMPDClient:
 
     @classmethod
     @asynccontextmanager
-    async def make(cls, address: str, port: int) -> AsyncGenerator:
+    async def make(cls, address: str, port: int) -> AsyncIterator[BaseMPDClient]:
         """Create a BaseMPDClient using a TCP connection.
 
         This should be used instead of instantiating the class directly.
@@ -130,7 +132,7 @@ class BaseMPDClient:
 
     @classmethod
     @asynccontextmanager
-    async def make_unix(cls, socket: Path) -> AsyncGenerator:
+    async def make_unix(cls, socket: Path) -> AsyncIterator[BaseMPDClient]:
         """Create a BaseMPDClient using a Unix socket.
 
         This should be used instead of instantiating the class directly.

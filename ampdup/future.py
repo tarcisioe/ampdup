@@ -154,3 +154,8 @@ class Future(Generic[T]):
         """
         await self._state.wait_fulfilled()
         return self._state.get()
+
+
+__all__ = [
+    'Future',
+]
