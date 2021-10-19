@@ -1,9 +1,10 @@
 """Implementation of a loop-agnostic Future class."""
 
 from dataclasses import dataclass, field
-from typing import Generic, Protocol, TypeVar
+from typing import Generic, TypeVar
 
 from anyio import Event
+from typing_extensions import Protocol
 
 T = TypeVar('T')
 
