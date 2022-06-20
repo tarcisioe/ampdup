@@ -1,6 +1,6 @@
 """Tasks for summon."""
 import typer
-from summon.exec import execute
+from summon.execute import execute
 from summon.tasks import task
 
 
@@ -28,7 +28,8 @@ def install_dev_tools(
             'pylint-quotes',
             *extra_deps,
         ],
+        raise_error=True,
     )
 
     if not ci:
-        execute('pre-commit install')
+        execute('pre-commit install', raise_error=True)
