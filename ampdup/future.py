@@ -38,19 +38,15 @@ class FutureState(Generic[T], Protocol):
         When the state changes, an event must be provided to signal tasks that are
         waiting for the future to be set.
         """
-        ...
 
     def fail(self, error: Exception) -> StateChange[T]:
         """Produce a new state when the future is failed from this given state."""
-        ...
 
     async def wait_fulfilled(self) -> None:
         """Wait until the future is fulfilled."""
-        ...
 
     def get(self) -> T:
         """Get the value of the future if available in the state."""
-        ...
 
 
 @dataclass(frozen=True)

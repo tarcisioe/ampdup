@@ -10,7 +10,7 @@ def develop(test_only: bool, ci: bool):
     if not test_only:
         ci_args = ['--ci'] if ci else []
         run(
-            ['poetry', 'run', 'python', '-m', 'tasks', 'install-dev-tools', *ci_args],
+            ['poetry', 'run', 'summon', 'install-dev-tools', *ci_args],
             check=True,
         )
 
